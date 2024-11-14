@@ -23,19 +23,19 @@ jobs:
 
       - name: Build
         run: |
-          $env:CGO_ENABLED='0'; $env:GOOS='${{ matrix.goos }}'; $env:GOARCH='${{ matrix.goarch }}'; go build -o out/ftb-server-${{ matrix.goos }}-${{ matrix.goarch }}.exe -trimpath -buildvcs=false -ldflags "-s -w -X 'util.GitCommit=${{env.GITHUB_SHA_SHORT}}' -X 'util.ReleaseVersion=${{env.GITHUB_REF_NAME}}'"
+          $env:CGO_ENABLED='0'; $env:GOOS='${{ matrix.goos }}'; $env:GOARCH='${{ matrix.goarch }}'; go build -o out/ftb-server-${{ matrix.goos }}-${{ matrix.goarch }}.exe -trimpath -buildvcs=false -ldflags "-s -w -X 'ftb-server-downloader/util.GitCommit=$env:GITHUB_SHA_SHORT' -X 'ftb-server-downloader/util.ReleaseVersion=$env:GITHUB_REF_NAME'"
 
       - name: Windows Signing
         run: |
           dotnet tool install --global AzureSignTool --version 5.0.0
           azuresigntool sign -kvu ${{ secrets.AZURE_KEY_VAULT_URL }} -kvi ${{ secrets.AZURE_KEY_VAULT_CLIENT_ID }} -kvs ${{ secrets.AZURE_KEY_VAULT_CLIENT_SECRET }} -kvc ${{ secrets.AZURE_KEY_VAULT_CERTIFICATE_NAME }} -kvt ${{ secrets.AZURE_KEY_VAULT_TENANT_ID }} -tr http://timestamp.digicert.com -v out\ftb-server-${{ matrix.goos }}-${{ matrix.goarch }}.exe
 
-      - name: Release artifacts
-        uses: softprops/action-gh-release@v2
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
         with:
-          files: |
+          name: release-windows-${{ matrix.goarch }}
+          path: |
             out/*
-
 
   build-macos:
     name: Build and release macOS
@@ -51,7 +51,8 @@ jobs:
 
       - name: Build
         run: |
-          CGO_ENABLED=0 GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -o out/ftb-server-${{ matrix.goos }}-${{ matrix.goarch }} -trimpath -buildvcs=false -ldflags "-s -w -X 'util.GitCommit=${{env.GITHUB_SHA_SHORT}}' -X 'util.ReleaseVersion=${{env.GITHUB_REF_NAME}}'"
+          CGO_ENABLED=0 GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -o out/ftb-server-${{ matrix.goos }}-${{ matrix.goarch }} -trimpath -buildvcs=false -ldflags "-s -w -X 'ftb-server-downloader/util.GitCommit=$GITHUB_SHA_SHORT' -X 'ftb-server-downloader/util.ReleaseVersion=$GITHUB_REF_NAME'"
+          chmod +x out/ftb-server-${{ matrix.goos }}-${{ matrix.goarch }}
 
       - name: Apple Certificate
         env:
@@ -84,10 +85,11 @@ jobs:
           echo "${{secrets.APPLE_API_KEY}}" > apple_api_key.p8
           xcrun notarytool submit "ftb-server_signed.zip" --key "./apple_api_key.p8" --key-id ${{ secrets.APPLE_API_KEY_ID }} --issuer ${{ secrets.APPLE_API_ISSUER }} --wait
 
-      - name: Release artifacts
-        uses: softprops/action-gh-release@v2
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
         with:
-          files: |
+          name: release-macos-${{ matrix.goarch }}
+          path: |
             out/*
 
 
@@ -97,7 +99,7 @@ jobs:
     strategy:
       matrix:
         goos: [ linux, freebsd ]
-        goarch: [ amd64, arm64, riscv64 ]
+        goarch: [ amd64, arm64 ]
     steps:
       - uses: actions/checkout@v4
       - uses: ./
@@ -105,46 +107,93 @@ jobs:
 
       - name: Build
         run: |
-          CGO_ENABLED=0 GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -o out/ftb-server-${{ matrix.goos }}-${{ matrix.goarch }} -trimpath -buildvcs=false -ldflags "-s -w -X 'util.GitCommit=${{env.GITHUB_SHA_SHORT}}' -X 'util.ReleaseVersion=${{env.GITHUB_REF_NAME}}'"
+          CGO_ENABLED=0 GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -o out/ftb-server-${{ matrix.goos }}-${{ matrix.goarch }} -trimpath -buildvcs=false -ldflags "-s -w -X 'ftb-server-downloader/util.GitCommit=$GITHUB_SHA_SHORT' -X 'ftb-server-downloader/util.ReleaseVersion=$GITHUB_REF_NAME'"
+          chmod +x out/ftb-server-${{ matrix.goos }}-${{ matrix.goarch }}
 
-      - name: Release artifacts
-        uses: softprops/action-gh-release@v2
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
         with:
-          files: |
+          name: release-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: |
             out/*
+  release:
+    needs:
+      - build-windows
+      - build-macos
+      - build-linux
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        
+      # Windows
+      - name: Download windows amd64 artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: release-windows-amd64
+          path: release/
 
+      - name: Download windows arm64 artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: release-windows-arm64
+          path: release/
 
+      # Macos
+      - name: Download macos amd64 artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: release-macos-amd64
+          path: release/
 
-#  release-artifacts:
-#    needs:
-#      - build-windows
-#      - build-macos
-#      - build-linux
-#    runs-on: ubuntu-latest
-#    steps:
-#      - name: Download windows releases
-#        uses: actions/download-artifact@v4
-#        with:
-#          name: release-windows
-#          path: out/
-#      - name: Download macos releases
-#        uses: actions/download-artifact@v4
-#        with:
-#          name: release-macos
-#          path: out/
-#      - name: Download linux releases
-#        uses: actions/download-artifact@v4
-#        with:
-#          name: release-linux
-#          path: out/
-#      - name: Get B2 client
-#        shell: bash
-#        run: |
-#          wget -q -O /usr/local/bin/b2 https://github.com/Backblaze/B2_Command_Line_Tool/releases/latest/download/b2-linux
-#          chmod +x /usr/local/bin/b2
-#      - name: Upload
-#        shell: bash
-#        run: |
-#          ls -la release
-#          b2 authorize-account ${{ secrets.AWS_ACCESS_KEY_ID }} ${{ secrets.AWS_SECRET_ACCESS_KEY }} > /dev/null 2>&1
-#          b2 sync --replace-newer --no-progress release b2://${{ secrets.PUBLISH_BUCKET }}/app
+      - name: Download macos arm64 artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: release-macos-arm64
+          path: release/
+
+      # Linux
+      - name: Download linux arm64 artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: release-linux-arm64
+          path: release/
+
+      - name: Download linux amd64 artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: release-linux-amd64
+          path: release/
+
+      - name: Download freebsd arm64 artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: release-freebsd-arm64
+          path: release/
+
+      - name: Download freebsd amd64 artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: release-freebsd-amd64
+          path: release/
+
+      - name: Get B2 client
+        shell: bash
+        run: |
+          wget -q -O /usr/local/bin/b2 https://github.com/Backblaze/B2_Command_Line_Tool/releases/latest/download/b2-linux
+          chmod +x /usr/local/bin/b2
+
+      - name: Upload
+        shell: bash
+        run: |
+          ls -la release
+          b2 authorize-account ${{ secrets.AWS_ACCESS_KEY_ID }} ${{ secrets.AWS_SECRET_ACCESS_KEY }} > /dev/null 2>&1
+          b2 sync --replace-newer --no-progress release b2://${{ secrets.PUBLISH_BUCKET }}/bin/server-installer/latest/
+          b2 sync --replace-newer --no-progress release b2://${{ secrets.PUBLISH_BUCKET }}/bin/server-installer/$GITHUB_REF_NAME/
+
+      # Release to GitHub
+      - name: Github Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          gh release create $GITHUB_REF_NAME --title $GITHUB_REF_NAME --notes "Latest version of the server installer" --generate-notes release/*
