@@ -1,0 +1,150 @@
+name: "Build & Release"
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  build-windows:
+    name: Build and release Windows
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        goos: [ windows ]
+        goarch: [ amd64, arm64 ]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./
+        name: "Common Setup"
+
+      - name: Build
+        run: |
+          $env:CGO_ENABLED='0'; $env:GOOS='${{ matrix.goos }}'; $env:GOARCH='${{ matrix.goarch }}'; go build -o out/ftb-server-${{ matrix.goos }}-${{ matrix.goarch }}.exe -trimpath -buildvcs=false -ldflags "-s -w -X 'util.GitCommit=${{env.GITHUB_SHA_SHORT}}' -X 'util.ReleaseVersion=${{env.GITHUB_REF_NAME}}'"
+
+      - name: Windows Signing
+        run: |
+          dotnet tool install --global AzureSignTool --version 5.0.0
+          azuresigntool sign -kvu ${{ secrets.AZURE_KEY_VAULT_URL }} -kvi ${{ secrets.AZURE_KEY_VAULT_CLIENT_ID }} -kvs ${{ secrets.AZURE_KEY_VAULT_CLIENT_SECRET }} -kvc ${{ secrets.AZURE_KEY_VAULT_CERTIFICATE_NAME }} -kvt ${{ secrets.AZURE_KEY_VAULT_TENANT_ID }} -tr http://timestamp.digicert.com -v out\ftb-server-${{ matrix.goos }}-${{ matrix.goarch }}.exe
+
+      - name: Release artifacts
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            out/*
+
+
+  build-macos:
+    name: Build and release macOS
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        goos: [ darwin ]
+        goarch: [ amd64, arm64 ]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./
+        name: "Common Setup"
+
+      - name: Build
+        run: |
+          CGO_ENABLED=0 GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -o out/ftb-server-${{ matrix.goos }}-${{ matrix.goarch }} -trimpath -buildvcs=false -ldflags "-s -w -X 'util.GitCommit=${{env.GITHUB_SHA_SHORT}}' -X 'util.ReleaseVersion=${{env.GITHUB_REF_NAME}}'"
+
+      - name: Apple Certificate
+        env:
+          BUILD_CERTIFICATE_BASE64: ${{ secrets.CSC_LINK }}
+          P12_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          # create variables
+          CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+
+          # import certificate and provisioning profile from secrets
+          echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode -o $CERTIFICATE_PATH
+
+          # create temporary keychain
+          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH > /dev/null
+          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH > /dev/null
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH > /dev/null
+
+          # import certificate to keychain
+          security import $CERTIFICATE_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH > /dev/null
+          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH > /dev/null
+          security list-keychain -d user -s $KEYCHAIN_PATH > /dev/null
+
+      - name: Codesign & Notarize
+        run: |
+          codesign -s "5372643C69B1D499BDF6EA772082E9CE99E85029" -v ./out/ftb-server-darwin-${{ matrix.goarch }} --options=runtime --timestamp
+          codesign -dv ./out/ftb-server-darwin-${{ matrix.goarch }}
+          zip -r ftb-server_signed.zip out/ftb-server-darwin-${{ matrix.goarch }}
+          echo "${{secrets.APPLE_API_KEY}}" > apple_api_key.p8
+          xcrun notarytool submit "ftb-server_signed.zip" --key "./apple_api_key.p8" --key-id ${{ secrets.APPLE_API_KEY_ID }} --issuer ${{ secrets.APPLE_API_ISSUER }} --wait
+
+      - name: Release artifacts
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            out/*
+
+
+  build-linux:
+    name: Build and release Linux
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        goos: [ linux, freebsd ]
+        goarch: [ amd64, arm64, riscv64 ]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./
+        name: "Common Setup"
+
+      - name: Build
+        run: |
+          CGO_ENABLED=0 GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -o out/ftb-server-${{ matrix.goos }}-${{ matrix.goarch }} -trimpath -buildvcs=false -ldflags "-s -w -X 'util.GitCommit=${{env.GITHUB_SHA_SHORT}}' -X 'util.ReleaseVersion=${{env.GITHUB_REF_NAME}}'"
+
+      - name: Release artifacts
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            out/*
+
+
+
+#  release-artifacts:
+#    needs:
+#      - build-windows
+#      - build-macos
+#      - build-linux
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Download windows releases
+#        uses: actions/download-artifact@v4
+#        with:
+#          name: release-windows
+#          path: out/
+#      - name: Download macos releases
+#        uses: actions/download-artifact@v4
+#        with:
+#          name: release-macos
+#          path: out/
+#      - name: Download linux releases
+#        uses: actions/download-artifact@v4
+#        with:
+#          name: release-linux
+#          path: out/
+#      - name: Get B2 client
+#        shell: bash
+#        run: |
+#          wget -q -O /usr/local/bin/b2 https://github.com/Backblaze/B2_Command_Line_Tool/releases/latest/download/b2-linux
+#          chmod +x /usr/local/bin/b2
+#      - name: Upload
+#        shell: bash
+#        run: |
+#          ls -la release
+#          b2 authorize-account ${{ secrets.AWS_ACCESS_KEY_ID }} ${{ secrets.AWS_SECRET_ACCESS_KEY }} > /dev/null 2>&1
+#          b2 sync --replace-newer --no-progress release b2://${{ secrets.PUBLISH_BUCKET }}/app

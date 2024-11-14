@@ -1,0 +1,9 @@
+.DS_Store
+.idea/
+installer_*
+installer
+test/*
+*.log
+out/
+
+.git-old/

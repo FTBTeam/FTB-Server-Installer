@@ -1,0 +1,27 @@
+name: "Setup Common"
+description: "Common setup for all builds"
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Envs
+      shell: bash
+      env:
+        GITHUB_REF_NAME: ${{ github.ref_name }}
+      run: |
+        echo "GITHUB_SHA_SHORT=$(echo $GITHUB_SHA | cut -c 1-6)" >> $GITHUB_ENV
+
+    - name: Setup Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: 1.23
+        cache-dependency-path: go.sum
+
+    - name: Install dependencies
+      shell: bash
+      run: |
+        go get .
+
+    - name: Run tests
+      shell: bash
+      run: |
+        go test ./...
