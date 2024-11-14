@@ -72,7 +72,7 @@ func init() {
 		util.GitCommit = "Dev"
 	}
 
-	util.UserAgent = fmt.Sprintf("ftb-server-installer/%s", util.ReleaseVersion)
+	util.UserAgent = fmt.Sprintf("ftb-server-installer/1.0.0")
 
 	var err error
 	logFile, err = os.OpenFile("ftb-server-installer.log", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
