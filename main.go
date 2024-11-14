@@ -14,7 +14,7 @@ import (
 	"ftb-server-downloader/structs"
 	"ftb-server-downloader/util"
 	"github.com/cavaliergopher/grab/v3"
-	"github.com/codeclysm/extract/v3"
+	"github.com/codeclysm/extract/v4"
 	"github.com/pterm/pterm"
 	"github.com/pterm/pterm/putils"
 	"io"
