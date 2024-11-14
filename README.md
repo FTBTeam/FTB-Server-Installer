@@ -18,7 +18,11 @@ To run from the command line, open a command prompt and navigate to the director
 
 ### MacOS/Linux
 
+Open up a terminal and navigate to the directory where the installer is located. You can then run the installer with the following command:
 
+```cmd
+./serverinstaller -pack <pack_id> -version <version_id>
+```
 
 ### Flags
 
