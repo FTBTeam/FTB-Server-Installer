@@ -72,7 +72,12 @@ func init() {
 		util.GitCommit = "Dev"
 	}
 
-	util.UserAgent = fmt.Sprintf("ftb-server-installer/1.0.0")
+	userAgentVersion := util.ReleaseVersion
+	if strings.HasPrefix(util.ReleaseVersion, "v") {
+		userAgentVersion = strings.TrimPrefix(util.ReleaseVersion, "v")
+	}
+
+	util.UserAgent = fmt.Sprintf("ftb-server-installer/%s", userAgentVersion)
 
 	var err error
 	logFile, err = os.OpenFile("ftb-server-installer.log", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
