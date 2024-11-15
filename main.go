@@ -65,7 +65,7 @@ func init() {
 	flag.Parse()
 
 	if util.ReleaseVersion == "" || util.ReleaseVersion == "main" {
-		util.ReleaseVersion = "0.0.0"
+		util.ReleaseVersion = "v0.0.0"
 	}
 
 	if util.GitCommit == "" {
@@ -145,6 +145,7 @@ func main() {
 	// Get modpack details from the provider
 	modpack, err := selectedProvider.GetModpack()
 	if err != nil {
+		selectedProvider.FailedInstall()
 		pterm.Fatal.Println("Error getting modpack:", err.Error())
 	}
 	pterm.Debug.Printfln("Modpack: %+v", modpack)
@@ -163,6 +164,7 @@ func main() {
 	// Get the version information for the modpack from the provider
 	modpackVersion, err := selectedProvider.GetVersion()
 	if err != nil {
+		selectedProvider.FailedInstall()
 		pterm.Fatal.Println("Error getting modpack version:", err.Error())
 		return
 	}
@@ -181,6 +183,7 @@ func main() {
 	// Check if the install location exists, if it doesnt, ask if they want to create the folder(s)
 	exists, err := util.PathExists(installDir)
 	if err != nil {
+		selectedProvider.FailedInstall()
 		pterm.Fatal.Println("Unable to check if path exists:", err.Error())
 	}
 	mkdir := true
@@ -229,6 +232,7 @@ func main() {
 		if manifestExists {
 			existingManifest, err := util.ReadManifest(installDir)
 			if err != nil {
+				selectedProvider.FailedInstall()
 				pterm.Fatal.Println("Error reading manifest:", err.Error())
 			}
 
@@ -254,12 +258,14 @@ func main() {
 			if !sameVersion {
 				isUpdate, err = checkUpdate(existingManifest, manifest)
 				if err != nil {
+					selectedProvider.FailedInstall()
 					pterm.Fatal.Println("Check Update error:", err.Error())
 				}
 
 				if isUpdate {
 					existingManifest, err := util.ReadManifest(installDir)
 					if err != nil {
+						selectedProvider.FailedInstall()
 						pterm.Fatal.Println("Error reading manifest:", err.Error())
 						return
 					}
@@ -276,12 +282,14 @@ func main() {
 	// set up the modloader getter and installer
 	modLoader, err := getModLoader(modpackVersion.Targets, modpackVersion.Memory)
 	if err != nil {
+		selectedProvider.FailedInstall()
 		pterm.Fatal.Println("Error getting modloader:", err.Error())
 	}
 
 	// Add the modloader downloads to the files list
 	mlDownloads, err := modLoader.GetDownload()
 	if err != nil {
+		selectedProvider.FailedInstall()
 		pterm.Fatal.Println("Error getting mod loader downloads:", err.Error())
 	}
 	filesToDownload = append(filesToDownload, mlDownloads...)
@@ -318,6 +326,7 @@ func main() {
 	if !noJava && !jreAlreadyExists {
 		java, err = util.GetJava(modpackVersion.Targets.JavaVersion)
 		if err != nil {
+			selectedProvider.FailedInstall()
 			pterm.Fatal.Println("Error getting java:", err.Error())
 		}
 		filesToDownload = append(filesToDownload, java)
@@ -326,6 +335,7 @@ func main() {
 	if mkdir {
 		err = os.MkdirAll(installDir, 0777)
 		if err != nil {
+			selectedProvider.FailedInstall()
 			pterm.Fatal.Println("Unable to create install directory:", err.Error())
 		}
 	} else {
@@ -365,6 +375,7 @@ func main() {
 	pterm.Info.Printfln("Starting mod pack download...")
 	err = doDownload(filesToDownload...)
 	if err != nil {
+		selectedProvider.FailedInstall()
 		pterm.Fatal.Println(err.Error())
 	}
 
@@ -375,6 +386,7 @@ func main() {
 
 		javaFile, err := os.Open(filepath.Join(installDir, java.Name))
 		if err != nil {
+			selectedProvider.FailedInstall()
 			pterm.Fatal.Println("Error opening java archive", err.Error())
 		}
 		javaPkg := bufio.NewReader(javaFile)
@@ -396,6 +408,7 @@ func main() {
 		}
 		err = extract.Archive(context.TODO(), javaPkg, filepath.Join(installDir, "jre", modpackVersion.Targets.JavaVersion), shift)
 		if err != nil {
+			selectedProvider.FailedInstall()
 			pterm.Fatal.Println("Error extracting java archive:", err.Error())
 		}
 		javaFile.Close()
@@ -418,6 +431,7 @@ func main() {
 	if installModloader {
 		err = modLoader.Install(!noJava)
 		if err != nil {
+			selectedProvider.FailedInstall()
 			pterm.Fatal.Println("ModLoader installer error:", err.Error())
 		}
 	}
@@ -426,6 +440,7 @@ func main() {
 	if validate {
 		err = runValidation(manifest)
 		if err != nil {
+			selectedProvider.FailedInstall()
 			pterm.Fatal.Println("Error running validation:", err.Error())
 		}
 	}
@@ -433,6 +448,7 @@ func main() {
 	// write the version manifest
 	err = util.WriteManifest(installDir, manifest)
 	if err != nil {
+		selectedProvider.FailedInstall()
 		pterm.Fatal.Println("Error creating manifest:", err.Error())
 	}
 
@@ -445,6 +461,7 @@ func main() {
 		copyOverriddenFiles()
 	}*/
 
+	selectedProvider.SuccessfulInstall()
 	pterm.Success.Println("Modpack installed successfully")
 }
 

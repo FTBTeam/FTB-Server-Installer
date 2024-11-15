@@ -101,6 +101,22 @@ func (m *FTB) GetVersion() (structs.ModpackVersion, error) {
 	}, nil
 }
 
+func (m *FTB) SuccessfulInstall() {
+	url := fmt.Sprintf("%s/modpack/%d/%d/serverInstall/success", makeFTBUrl(m), m.PackId, m.VersionId)
+	_, err := util.DoGet(url)
+	if err != nil {
+		pterm.Error.Printfln("Error while sending successful install request to ftb: %s", err)
+	}
+}
+
+func (m *FTB) FailedInstall() {
+	url := fmt.Sprintf("%s/modpack/%d/%d/serverInstall/failure", makeFTBUrl(m), m.PackId, m.VersionId)
+	_, err := util.DoGet(url)
+	if err != nil {
+		pterm.Error.Printfln("Error while sending failed install request to ftb: %s", err)
+	}
+}
+
 func (m *FTB) SetVersionId(versionId int) {
 	m.VersionId = versionId
 }

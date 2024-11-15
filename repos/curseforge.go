@@ -34,3 +34,11 @@ func (v *CurseForge) GetVersion() (structs.ModpackVersion, error) {
 func (v *CurseForge) SetVersionId(versionId int) {
 	v.VersionId = versionId
 }
+
+func (m *CurseForge) SuccessfulInstall() {
+	return
+}
+
+func (m *CurseForge) FailedInstall() {
+	return
+}
