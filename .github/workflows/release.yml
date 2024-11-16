@@ -197,7 +197,7 @@ jobs:
         run: |
           ls -la release
           b2 authorize-account ${{ secrets.AWS_ACCESS_KEY_ID }} ${{ secrets.AWS_SECRET_ACCESS_KEY }} > /dev/null 2>&1
-          b2 file upload --no-progress ${{ secrets.PUBLISH_BUCKET }} latest.json /bin/server-installer/
+          b2 file upload --no-progress ${{ secrets.PUBLISH_BUCKET }} latest.json bin/server-installer/latest.json
           b2 sync --replace-newer --no-progress release b2://${{ secrets.PUBLISH_BUCKET }}/bin/server-installer/latest/
           b2 sync --replace-newer --no-progress release b2://${{ secrets.PUBLISH_BUCKET }}/bin/server-installer/$GITHUB_REF_NAME/
 
