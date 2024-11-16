@@ -180,7 +180,9 @@ jobs:
         if: "!contains(github.ref_name, 'beta')"
         shell: bash
         run: |
+          echo "$PWD"
           echo "{\"version\": \"$GITHUB_REF_NAME\", \"commit\": \"$GITHUB_SHA_SHORT\"}" > latest.json
+          cat latest.json
 
       - name: Get B2 client
         if: "!contains(github.ref_name, 'beta')"
@@ -195,7 +197,7 @@ jobs:
         run: |
           ls -la release
           b2 authorize-account ${{ secrets.AWS_ACCESS_KEY_ID }} ${{ secrets.AWS_SECRET_ACCESS_KEY }} > /dev/null 2>&1
-          b2 sync --replace-newer --no-progress latest.json b2://${{ secrets.PUBLISH_BUCKET }}/bin/server-installer/
+          b2 file upload --no-progress ${{ secrets.PUBLISH_BUCKET }} latest.json /bin/server-installer/
           b2 sync --replace-newer --no-progress release b2://${{ secrets.PUBLISH_BUCKET }}/bin/server-installer/latest/
           b2 sync --replace-newer --no-progress release b2://${{ secrets.PUBLISH_BUCKET }}/bin/server-installer/$GITHUB_REF_NAME/
 
