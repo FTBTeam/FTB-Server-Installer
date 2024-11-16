@@ -560,7 +560,7 @@ func runValidation(manifest structs.Manifest) error {
 		if f.HashType != "" && f.Hash != "" {
 			fileHash, err := util.FileHash(filepath.Join(installDir, f.Path, f.Name), f.HashType)
 			if err != nil {
-				pterm.Fatal.Println("Error getting file hash:", err.Error())
+				pterm.Error.Println("Error getting file hash:", err.Error())
 				continue
 			}
 			if fileHash != f.Hash {
