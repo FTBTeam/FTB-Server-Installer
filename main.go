@@ -65,7 +65,7 @@ func init() {
 	flag.Parse()
 
 	if util.ReleaseVersion == "" || util.ReleaseVersion == "main" {
-		util.ReleaseVersion = "v0.0.0"
+		util.ReleaseVersion = "v0.0.0-beta.0"
 	}
 
 	if util.GitCommit == "" {

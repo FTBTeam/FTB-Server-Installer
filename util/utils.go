@@ -486,6 +486,9 @@ type LatestJson struct {
 }
 
 func CheckForUpdate() (bool, error) {
+	if strings.Contains(ReleaseVersion, "beta") {
+		return false, nil
+	}
 	resp, err := DoGet("https://cdn.feed-the-beast.com/bin/server-installer/latest.json")
 	if err != nil {
 		return false, err
