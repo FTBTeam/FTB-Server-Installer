@@ -209,6 +209,7 @@ func main() {
 		if !manifestExists {
 			installDirEmpty, err := util.IsEmptyDir(installDir)
 			if err != nil {
+				selectedProvider.FailedInstall()
 				pterm.Fatal.Println("Error checking if directory is empty:", err.Error())
 			}
 
