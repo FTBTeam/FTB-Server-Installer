@@ -12,7 +12,6 @@ import (
 	"github.com/pterm/pterm"
 	"io"
 	"io/fs"
-	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -479,4 +478,36 @@ func (cw *CustomWriter) Write(p []byte) (n int, err error) {
 		}
 	}
 	return cw.writer.Write(filtered)
+}
+
+type LatestJson struct {
+	Version string `json:"version"`
+	Commit  string `json:"commit"`
+}
+
+func CheckForUpdate() (bool, error) {
+	resp, err := DoGet("https://cdn.feed-the-beast.com/bin/server-installer/latest.json")
+	if err != nil {
+		return false, err
+	}
+	defer resp.Body.Close()
+
+	var latestJson LatestJson
+	if err := json.NewDecoder(resp.Body).Decode(&latestJson); err != nil {
+		return false, err
+	}
+
+	semverLatest, err := semVer.NewVersion(latestJson.Version)
+	if err != nil {
+		return false, err
+	}
+	semverCurrent, err := semVer.NewVersion(ReleaseVersion)
+	if err != nil {
+		return false, err
+	}
+
+	if semverCurrent.LessThan(semverLatest) {
+		return true, nil
+	}
+	return false, nil
 }
