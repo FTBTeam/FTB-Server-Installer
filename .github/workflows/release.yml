@@ -176,24 +176,32 @@ jobs:
           name: release-freebsd-amd64
           path: release/
 
+      - name: Create latest.json
+        if: "!contains(github.ref_name, 'beta')"
+        shell: bash
+        run: |
+          echo "{\"version\": \"$GITHUB_REF_NAME\", \"commit\": \"$GITHUB_SHA_SHORT\"}" > latest.json
+
       - name: Get B2 client
+        if: "!contains(github.ref_name, 'beta')"
         shell: bash
         run: |
           wget -q -O /usr/local/bin/b2 https://github.com/Backblaze/B2_Command_Line_Tool/releases/latest/download/b2-linux
           chmod +x /usr/local/bin/b2
 
       - name: Upload
-        if: "!contains(github.event.head_commit.message, '[prerelease]')"
+        if: "!contains(github.ref_name, 'beta')"
         shell: bash
         run: |
           ls -la release
           b2 authorize-account ${{ secrets.AWS_ACCESS_KEY_ID }} ${{ secrets.AWS_SECRET_ACCESS_KEY }} > /dev/null 2>&1
+          b2 sync --replace-newer --no-progress latest.json b2://${{ secrets.PUBLISH_BUCKET }}/bin/server-installer/
           b2 sync --replace-newer --no-progress release b2://${{ secrets.PUBLISH_BUCKET }}/bin/server-installer/latest/
           b2 sync --replace-newer --no-progress release b2://${{ secrets.PUBLISH_BUCKET }}/bin/server-installer/$GITHUB_REF_NAME/
 
       # Release to GitHub
       - name: Github Release
-        if: "!contains(github.event.head_commit.message, '[prerelease]')"
+        if: "!contains(github.ref_name, 'beta')"
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
@@ -201,7 +209,7 @@ jobs:
           gh release create $GITHUB_REF_NAME --title $GITHUB_REF_NAME --notes "Latest version of the server installer" --generate-notes release/*
 
       - name: Github PreRelease
-        if: "contains(github.event.head_commit.message, '[prerelease]')"
+        if: "contains(github.ref_name, 'beta')"
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash

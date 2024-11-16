@@ -103,8 +103,23 @@ func init() {
 		putils.LettersFromStringWithStyle("T", pterm.NewStyle(pterm.FgGreen)),
 		putils.LettersFromStringWithStyle("B", pterm.NewStyle(pterm.FgRed))).Srender()
 	pterm.DefaultCenter.Println(logo)
-	pterm.DefaultCenter.WithCenterEachLineSeparately().Println(fmt.Sprintf("Server installer version: %s(%s)\n%s", util.ReleaseVersion, util.GitCommit, time.Now().UTC().Format(time.RFC1123)))
+	pterm.DefaultCenter.WithCenterEachLineSeparately().Printfln("Server installer version: %s(%s)\n%s", util.ReleaseVersion, util.GitCommit, time.Now().UTC().Format(time.RFC1123))
+	pterm.DefaultCenter.WithCenterEachLineSeparately().Println(pterm.Bold.Sprintf("Installer Issue tracker\nhttps://github.com/FTBTeam/FTB-Server-Installer/issues"))
 
+	updateAvailable, err := util.CheckForUpdate()
+	if err != nil {
+		pterm.Warning.Printfln("Error checking for update: %v", err)
+	}
+	if updateAvailable {
+		ext := ""
+		updateStyle := pterm.NewStyle(pterm.FgLightMagenta, pterm.Bold)
+		if runtime.GOOS == "windows" {
+			ext = ".exe"
+		}
+		installerName := fmt.Sprintf("ftb-server-%s-%s%s", runtime.GOOS, runtime.GOARCH, ext)
+		updateUrl := fmt.Sprintf("https://cdn.feed-the-beast.com/bin/server-installer/latest/%s", installerName)
+		pterm.Info.Printfln("%s", updateStyle.Sprintf("Update available download from: %s", updateUrl))
+	}
 	if verbose {
 		pterm.EnableDebugMessages()
 		pterm.Debug.Println("Verbose output enabled")
@@ -209,6 +224,7 @@ func main() {
 		if !manifestExists {
 			installDirEmpty, err := util.IsEmptyDir(installDir)
 			if err != nil {
+				selectedProvider.FailedInstall()
 				pterm.Fatal.Println("Error checking if directory is empty:", err.Error())
 			}
 
@@ -559,7 +575,7 @@ func runValidation(manifest structs.Manifest) error {
 		if f.HashType != "" && f.Hash != "" {
 			fileHash, err := util.FileHash(filepath.Join(installDir, f.Path, f.Name), f.HashType)
 			if err != nil {
-				pterm.Fatal.Println("Error getting file hash:", err.Error())
+				pterm.Error.Println("Error getting file hash:", err.Error())
 				continue
 			}
 			if fileHash != f.Hash {
