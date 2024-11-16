@@ -322,7 +322,7 @@ func validJavaArch(version string) (string, error) {
 func FileHash(path string, hash string) (string, error) {
 	f, err := os.Open(path)
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 	defer f.Close()
 
@@ -350,7 +350,7 @@ func CombineZip(inZip string, destZip string) error {
 
 	newZipFile, err := os.Create(destZip)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	defer newZipFile.Close()
 
