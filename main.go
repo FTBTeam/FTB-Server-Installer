@@ -103,8 +103,8 @@ func init() {
 		putils.LettersFromStringWithStyle("T", pterm.NewStyle(pterm.FgGreen)),
 		putils.LettersFromStringWithStyle("B", pterm.NewStyle(pterm.FgRed))).Srender()
 	pterm.DefaultCenter.Println(logo)
-	pterm.DefaultCenter.WithCenterEachLineSeparately().Println(fmt.Sprintf("Server installer version: %s(%s)\n%s", util.ReleaseVersion, util.GitCommit, time.Now().UTC().Format(time.RFC1123)))
-
+	pterm.DefaultCenter.WithCenterEachLineSeparately().Printfln("Server installer version: %s(%s)\n%s", util.ReleaseVersion, util.GitCommit, time.Now().UTC().Format(time.RFC1123))
+	pterm.DefaultCenter.WithCenterEachLineSeparately().Println(pterm.Bold.Sprintf("Installer Issue tracker\nhttps://github.com/FTBTeam/FTB-Server-Installer/issues"))
 	if verbose {
 		pterm.EnableDebugMessages()
 		pterm.Debug.Println("Verbose output enabled")
