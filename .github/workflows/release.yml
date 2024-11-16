@@ -183,7 +183,7 @@ jobs:
           chmod +x /usr/local/bin/b2
 
       - name: Upload
-        if: "!contains(github.event.head_commit.message, '[prerelease]')"
+        if: "!contains(github.ref_name, 'beta')"
         shell: bash
         run: |
           ls -la release
@@ -193,7 +193,7 @@ jobs:
 
       # Release to GitHub
       - name: Github Release
-        if: "!contains(github.event.head_commit.message, '[prerelease]')"
+        if: "!contains(github.ref_name, 'beta')"
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
@@ -201,7 +201,7 @@ jobs:
           gh release create $GITHUB_REF_NAME --title $GITHUB_REF_NAME --notes "Latest version of the server installer" --generate-notes release/*
 
       - name: Github PreRelease
-        if: "contains(github.event.head_commit.message, '[prerelease]')"
+        if: "contains(github.ref_name, 'beta')"
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
