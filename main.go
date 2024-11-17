@@ -112,13 +112,16 @@ func init() {
 	}
 	if updateAvailable {
 		ext := ""
-		updateStyle := pterm.NewStyle(pterm.FgLightMagenta, pterm.Bold)
 		if runtime.GOOS == "windows" {
 			ext = ".exe"
 		}
 		installerName := fmt.Sprintf("ftb-server-%s-%s%s", runtime.GOOS, runtime.GOARCH, ext)
 		updateUrl := fmt.Sprintf("https://cdn.feed-the-beast.com/bin/server-installer/latest/%s", installerName)
-		pterm.Info.Printfln("%s", updateStyle.Sprintf("Update available download from: %s", updateUrl))
+
+		updateStyle := pterm.NewStyle(pterm.FgLightMagenta, pterm.Bold)
+		updateURLStyle := pterm.NewStyle(pterm.FgLightCyan, pterm.Bold, pterm.Underscore)
+		pterm.Info.Printfln("%s%s", updateStyle.Sprint("Installer update available download from: "), updateURLStyle.Sprint(updateUrl))
+		pterm.Println()
 	}
 	if verbose {
 		pterm.EnableDebugMessages()
