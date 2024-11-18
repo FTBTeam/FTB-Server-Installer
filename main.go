@@ -275,7 +275,7 @@ func main() {
 
 			sameVersion := isSameModpackVersion(existingManifest, manifest)
 
-			if !sameVersion {
+			if !sameVersion && isSamePack {
 				isUpdate, err = checkUpdate(existingManifest, manifest)
 				if err != nil {
 					selectedProvider.FailedInstall()
