@@ -15,6 +15,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"runtime"
@@ -177,6 +178,15 @@ func PathExists(path string) (bool, error) {
 		return false, nil
 	}
 	return false, err
+}
+
+func OsJavaExists() bool {
+	path, err := exec.LookPath("java")
+	pterm.Debug.Printfln("Looking for java in %s", path)
+	if err != nil {
+		return false
+	}
+	return true
 }
 
 func GetJava(version string) (structs.File, error) {
