@@ -98,7 +98,7 @@ func (s NeoForge) Install(useOwnJava bool) error {
 		}
 	}
 	pterm.Success.Println("NeoForge installed successfully")
-	//_ = os.Remove(filepath.Join(s.InstallDir, installerName) + ".log")
+	// _ = os.Remove(filepath.Join(s.InstallDir, installerName) + ".log")
 	_ = os.Remove(filepath.Join(s.InstallDir, installerName))
 
 	err = s.startScript(useOwnJava)

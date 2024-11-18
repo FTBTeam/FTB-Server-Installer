@@ -26,18 +26,19 @@ Open up a terminal and navigate to the directory where the installer is located.
 
 ### Flags
 
-| Flag          | Default              | Description                                                                                                         |
-|---------------|----------------------|---------------------------------------------------------------------------------------------------------------------|
-| `-dir`        | `./`                 | Directory to install the server files in (Defaults to current directory)                                            |
-| `-auto`       | `false`              | Doesn't ask questions, just runs the installer                                                                      |
-| `-pack`       |                      | The ID of the modpack you would like to install                                                                     |
-| `-version`    |                      | ID of the modpack version you would like to install, if not set, latest stable release will be selected             |
-| `-latest`     | `false`              | If the version id is not set, and this flag is used, it will get the latest stable, beta or alpha version available |
-| `-validate`   | `false`              | Validates the modpack files after they have been downloaded and installed                                           |
-| `-provider`   | `ftb`                | Sets the modpack provider (ftb is the only provider at the moment)                                                  |
-| `-force`      |                      | Only works when -auto is used, will force the installer to continue upon warnings                                   |
-| `-threads`    | CPU thread count * 2 | Number of concurrent download threads                                                                               |
-| `-apikey`     |                      | API key for accessing private modpacks                                                                              |
-| `-no-java`    | `false`              | If set, installer wont download a copy of java                                                                      |
-| `-no-colours` | `false`              | Removes the colour formatting from the console output                                                               |
-| `-verbose`    | `false`              | Enables debug logging                                                                                               |
+| Flag              | Default              | Description                                                                                                         |
+|-------------------|----------------------|---------------------------------------------------------------------------------------------------------------------|
+| `-dir`            | `./`                 | Directory to install the server files in (Defaults to current directory)                                            |
+| `-auto`           | `false`              | Doesn't ask questions, just runs the installer                                                                      |
+| `-pack`           |                      | The ID of the modpack you would like to install                                                                     |
+| `-version`        |                      | ID of the modpack version you would like to install, if not set, latest stable release will be selected             |
+| `-latest`         | `false`              | If the version id is not set, and this flag is used, it will get the latest stable, beta or alpha version available |
+| `-validate`       | `false`              | Validates the modpack files after they have been downloaded and installed                                           |
+| `-provider`       | `ftb`                | Sets the modpack provider (ftb is the only provider at the moment)                                                  |
+| `-force`          |                      | Only works when -auto is used, will force the installer to continue upon warnings                                   |
+| `-threads`        | CPU thread count * 2 | Number of concurrent download threads                                                                               |
+| `-apikey`         |                      | API key for accessing private modpacks                                                                              |
+| `-skip-modloader` | `false`              | If set, installer will skip running the modloader installer                                                         |
+| `-no-java`        | `false`              | If set, installer wont download a copy of java                                                                      |
+| `-no-colours`     | `false`              | Removes the colour formatting from the console output                                                               |
+| `-verbose`        | `false`              | Enables debug logging                                                                                               |

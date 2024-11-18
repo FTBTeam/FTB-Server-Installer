@@ -102,7 +102,7 @@ func (s Forge) Install(useOwnJava bool) error {
 			}
 		}
 		pterm.Success.Println("Forge installed successfully")
-		//_ = os.Remove(filepath.Join(s.InstallDir, jarName) + ".log")
+		// _ = os.Remove(filepath.Join(s.InstallDir, jarName) + ".log")
 		_ = os.Remove(filepath.Join(s.InstallDir, jarName))
 	} else if filepath.Ext(jarName) == ".zip" {
 		pathExists, err := util.PathExists(filepath.Join(s.InstallDir, fmt.Sprintf("minecraft_server.%s.jar", s.Targets.McVersion)))

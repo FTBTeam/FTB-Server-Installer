@@ -29,40 +29,25 @@ import (
 )
 
 var (
-	packId     int
-	versionId  int
-	installDir string
-	threads    int
-	provider   string
-	auto       bool
-	force      bool
-	latest     bool
-	apiKey     string
-	validate   bool
-	noJava     bool
-	noColours  bool
-	verbose    bool
+	packId        int
+	versionId     int
+	installDir    string
+	threads       int
+	provider      string
+	auto          bool
+	force         bool
+	latest        bool
+	apiKey        string
+	validate      bool
+	skipModloader bool
+	noJava        bool
+	noColours     bool
+	verbose       bool
 
 	logFile *os.File
-
-	//failedDownloads []structs.File
 )
 
 func init() {
-	flag.StringVar(&provider, "provider", "ftb", "Modpack provider (Currently only 'ftb' is supported)")
-	flag.IntVar(&packId, "pack", 0, "Modpack ID")
-	flag.IntVar(&versionId, "version", 0, "Modpack version ID, if not provided, the latest version will be used")
-	flag.StringVar(&installDir, "dir", "", "Installation directory")
-	flag.BoolVar(&auto, "auto", false, "Dont ask questions, just install the server")
-	flag.BoolVar(&latest, "latest", false, "Gets the latest version of the modpack")
-	flag.BoolVar(&force, "force", false, "Force the modpack install (only works with -auto)")
-	flag.IntVar(&threads, "threads", runtime.NumCPU()*2, "Number of threads to use (Default: CPU Cores * 2)")
-	flag.StringVar(&apiKey, "apikey", "public", "FTB/CurseForge API key")
-	flag.BoolVar(&validate, "validate", false, "Validate the modpack after install")
-	flag.BoolVar(&noJava, "no-java", false, "Do not install Java")
-	flag.BoolVar(&noColours, "no-colours", false, "Do not use colours")
-	flag.BoolVar(&verbose, "verbose", false, "Verbose output")
-	flag.Parse()
 
 	if util.ReleaseVersion == "" || util.ReleaseVersion == "main" {
 		util.ReleaseVersion = "v0.0.0-beta.0"
@@ -78,6 +63,24 @@ func init() {
 	}
 
 	util.UserAgent = fmt.Sprintf("ftb-server-installer/%s", userAgentVersion)
+}
+
+func main() {
+	flag.StringVar(&provider, "provider", "ftb", "Modpack provider (Currently only 'ftb' is supported)")
+	flag.IntVar(&packId, "pack", 0, "Modpack ID")
+	flag.IntVar(&versionId, "version", 0, "Modpack version ID, if not provided, the latest version will be used")
+	flag.StringVar(&installDir, "dir", "", "Installation directory")
+	flag.BoolVar(&auto, "auto", false, "Dont ask questions, just install the server")
+	flag.BoolVar(&latest, "latest", false, "Gets the latest version of the modpack")
+	flag.BoolVar(&force, "force", false, "Force the modpack install (only works with -auto)")
+	flag.IntVar(&threads, "threads", runtime.NumCPU()*2, "Number of threads to use (Default: CPU Cores * 2)")
+	flag.StringVar(&apiKey, "apikey", "public", "FTB/CurseForge API key")
+	flag.BoolVar(&validate, "validate", false, "Validate the modpack after install")
+	flag.BoolVar(&skipModloader, "skip-modloader", false, "Skip installing the modloader")
+	flag.BoolVar(&noJava, "no-java", false, "Do not install Java")
+	flag.BoolVar(&noColours, "no-colours", false, "Do not use colours")
+	flag.BoolVar(&verbose, "verbose", false, "Verbose output")
+	flag.Parse()
 
 	var err error
 	logFile, err = os.OpenFile("ftb-server-installer.log", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
@@ -133,9 +136,7 @@ func init() {
 		pterm.Fatal.Println("Error getting absolute path:", err.Error())
 	}
 	installDir = abs
-}
 
-func main() {
 	defer logFile.Close()
 	// Get the pack ID and version ID from the installer name if not provided as flags
 	if packId == 0 {
@@ -274,7 +275,7 @@ func main() {
 
 			sameVersion := isSameModpackVersion(existingManifest, manifest)
 
-			if !sameVersion {
+			if !sameVersion && isSamePack {
 				isUpdate, err = checkUpdate(existingManifest, manifest)
 				if err != nil {
 					selectedProvider.FailedInstall()
@@ -439,15 +440,14 @@ func main() {
 
 	// Ask if the user would like to run the modloader installer
 	// todo: if the modloader is already installed check if its the same and ignore the update
-	installModloader := true
-	if !auto {
-		installModloader = util.ConfirmYN(
+	if !auto && !skipModloader {
+		skipModloader = !util.ConfirmYN(
 			fmt.Sprintf("Would you like to run the %s installer?", modpackVersion.Targets.ModLoader.Name),
-			installModloader,
+			true,
 			pterm.Info.MessageStyle,
 		)
 	}
-	if installModloader {
+	if !skipModloader {
 		err = modLoader.Install(!noJava)
 		if err != nil {
 			selectedProvider.FailedInstall()
@@ -489,7 +489,7 @@ func getProvider() (repos.ModpackRepo, error) {
 	switch provider {
 	case "ftb":
 		return repos.GetFTB(packId, versionId, apiKey), nil
-	//case "curseforge":
+	// case "curseforge":
 	//	return repos.GetCurseForge(packId, versionId), nil
 	default:
 		return nil, errors.New(fmt.Sprintf("'%s' not recognised", provider))
@@ -511,7 +511,7 @@ func getModLoader(targets structs.ModpackTargets, memory structs.Memory) (modloa
 }
 
 func doDownload(files ...structs.File) error {
-	//failedDownloads = []structs.File{}
+	// failedDownloads = []structs.File{}
 	p, _ := pterm.DefaultProgressbar.WithTitle("Downloading...").WithTotal(len(files)).Start()
 	var wg sync.WaitGroup
 
