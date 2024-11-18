@@ -29,19 +29,20 @@ import (
 )
 
 var (
-	packId     int
-	versionId  int
-	installDir string
-	threads    int
-	provider   string
-	auto       bool
-	force      bool
-	latest     bool
-	apiKey     string
-	validate   bool
-	noJava     bool
-	noColours  bool
-	verbose    bool
+	packId        int
+	versionId     int
+	installDir    string
+	threads       int
+	provider      string
+	auto          bool
+	force         bool
+	latest        bool
+	apiKey        string
+	validate      bool
+	skipModloader bool
+	noJava        bool
+	noColours     bool
+	verbose       bool
 
 	logFile *os.File
 
@@ -59,6 +60,7 @@ func init() {
 	flag.IntVar(&threads, "threads", runtime.NumCPU()*2, "Number of threads to use (Default: CPU Cores * 2)")
 	flag.StringVar(&apiKey, "apikey", "public", "FTB/CurseForge API key")
 	flag.BoolVar(&validate, "validate", false, "Validate the modpack after install")
+	flag.BoolVar(&skipModloader, "skip-modloader", false, "Skip installing the modloader")
 	flag.BoolVar(&noJava, "no-java", false, "Do not install Java")
 	flag.BoolVar(&noColours, "no-colours", false, "Do not use colours")
 	flag.BoolVar(&verbose, "verbose", false, "Verbose output")
@@ -439,15 +441,14 @@ func main() {
 
 	// Ask if the user would like to run the modloader installer
 	// todo: if the modloader is already installed check if its the same and ignore the update
-	installModloader := true
-	if !auto {
-		installModloader = util.ConfirmYN(
+	if !auto && !skipModloader {
+		skipModloader = !util.ConfirmYN(
 			fmt.Sprintf("Would you like to run the %s installer?", modpackVersion.Targets.ModLoader.Name),
-			installModloader,
+			true,
 			pterm.Info.MessageStyle,
 		)
 	}
-	if installModloader {
+	if !skipModloader {
 		err = modLoader.Install(!noJava)
 		if err != nil {
 			selectedProvider.FailedInstall()
