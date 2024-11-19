@@ -338,10 +338,7 @@ func main() {
 
 	// If noJava is set or we already have java downloaded, we skip the java download
 	if !noJava && !auto && !jreAlreadyExists {
-		dlJava := util.ConfirmYN("Do you want to download java?", true, pterm.Info.MessageStyle)
-		if !dlJava {
-			noJava = true
-		}
+		noJava = !util.ConfirmYN("Do you want to download java?", true, pterm.Info.MessageStyle)
 	}
 	if !noJava && !jreAlreadyExists {
 		java, err = util.GetJava(modpackVersion.Targets.JavaVersion)
@@ -446,6 +443,11 @@ func main() {
 			true,
 			pterm.Info.MessageStyle,
 		)
+	}
+	if !util.OsJavaExists() {
+		// Revisit this, and possibly ask if they want to download java
+		pterm.Warning.Printfln("Java is not installed, skipping modloader installer")
+		skipModloader = true
 	}
 	if !skipModloader {
 		err = modLoader.Install(!noJava)
