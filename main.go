@@ -444,7 +444,7 @@ func main() {
 			pterm.Info.MessageStyle,
 		)
 	}
-	if !util.OsJavaExists() {
+	if noJava && !util.OsJavaExists() {
 		// Revisit this, and possibly ask if they want to download java
 		pterm.Warning.Printfln("Java is not installed, skipping modloader installer")
 		skipModloader = true
