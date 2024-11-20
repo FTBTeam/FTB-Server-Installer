@@ -226,14 +226,14 @@ func GetJava(version string) (structs.File, error) {
 	}, nil
 }
 
-func GetJavaPath(installDir string, version string) (string, error) {
+func GetJavaPath(version string) (string, error) {
 	switch runtime.GOOS {
 	case "windows":
-		return filepath.Join(installDir, "jre", version, "bin", "java.exe"), nil
+		return filepath.Join("jre", version, "bin", "java.exe"), nil
 	case "darwin":
-		return filepath.Join(installDir, "jre", version, "Contents", "Home", "bin", "java"), nil
+		return filepath.Join("jre", version, "Contents", "Home", "bin", "java"), nil
 	case "linux":
-		return filepath.Join(installDir, "jre", version, "bin", "java"), nil
+		return filepath.Join("jre", version, "bin", "java"), nil
 	default:
 		return "", errors.New("unsupported platform")
 	}

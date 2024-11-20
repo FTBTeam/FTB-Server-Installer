@@ -73,11 +73,13 @@ func (s NeoForge) Install(useOwnJava bool) error {
 
 	jrePath := "java"
 	if useOwnJava {
-		jrePath, err = util.GetJavaPath(s.InstallDir, s.Targets.JavaVersion)
+		jrePath, err = util.GetJavaPath(s.Targets.JavaVersion)
 		if err != nil {
 			jrePath = "java"
 		}
 	}
+
+	jrePath = filepath.Join(s.InstallDir, jrePath)
 
 	cmd := exec.Command(jrePath, "-jar", installerName, "--installServer")
 	cmd.Dir = s.InstallDir
@@ -165,12 +167,12 @@ func (s NeoForge) startScript(ownJava bool) error {
 			match, _ := regexp.MatchString("^(java).+$", line)
 			if match && ownJava {
 				pterm.Debug.Println("Replacing java path in run script")
-				javaPath, err := util.GetJavaPath(s.InstallDir, s.Targets.JavaVersion)
+				javaPath, err := util.GetJavaPath(s.Targets.JavaVersion)
 				if err != nil {
 					return err
 				}
 				line = regexp.MustCompile("^java").
-					ReplaceAllString(line, javaPath)
+					ReplaceAllString(line, fmt.Sprintf("\"%s\"", javaPath))
 			}
 			lines = append(lines, line)
 		}
