@@ -173,6 +173,14 @@ func (s NeoForge) startScript(ownJava bool) error {
 				}
 				line = regexp.MustCompile("^java").
 					ReplaceAllString(line, fmt.Sprintf("\"%s\"", javaPath))
+
+				if runtime.GOOS == "windows" {
+					line = regexp.MustCompile(`%\*`).
+						ReplaceAllString(line, fmt.Sprintf("%s", "nogui %*"))
+				} else if runtime.GOOS == "darwin" || runtime.GOOS == "linux" {
+					line = regexp.MustCompile(`"\$@"`).
+						ReplaceAllString(line, fmt.Sprintf("%s", "nogui \"$@\""))
+				}
 			}
 			lines = append(lines, line)
 		}
