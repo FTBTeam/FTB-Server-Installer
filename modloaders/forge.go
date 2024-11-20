@@ -77,11 +77,13 @@ func (s Forge) Install(useOwnJava bool) error {
 	if filepath.Ext(jarName) == ".jar" {
 		jrePath := "java"
 		if useOwnJava {
-			jrePath, err = util.GetJavaPath(s.InstallDir, s.Targets.JavaVersion)
+			jrePath, err = util.GetJavaPath(s.Targets.JavaVersion)
 			if err != nil {
 				jrePath = "java"
 			}
 		}
+
+		jrePath = filepath.Join(s.InstallDir, jrePath)
 
 		cmd := exec.Command(jrePath, "-jar", jarName, "--installServer")
 		cmd.Dir = s.InstallDir
@@ -212,12 +214,12 @@ func (s Forge) startScript(ownJava bool) error {
 			match, _ := regexp.MatchString("^(java).+$", line)
 			if match && ownJava {
 				pterm.Debug.Println("Replacing java path in run script")
-				javaPath, err := util.GetJavaPath(s.InstallDir, s.Targets.JavaVersion)
+				javaPath, err := util.GetJavaPath(s.Targets.JavaVersion)
 				if err != nil {
 					return err
 				}
 				line = regexp.MustCompile("^java").
-					ReplaceAllString(line, javaPath)
+					ReplaceAllString(line, fmt.Sprintf("\"%s\"", javaPath))
 			}
 			lines = append(lines, line)
 		}
@@ -243,7 +245,7 @@ func (s Forge) startScript(ownJava bool) error {
 		defer runFile.Close()
 		javaPath := "java"
 		if ownJava {
-			javaPath, err = util.GetJavaPath(s.InstallDir, s.Targets.JavaVersion)
+			javaPath, err = util.GetJavaPath(s.Targets.JavaVersion)
 			if err != nil {
 				javaPath = "java"
 			}
@@ -284,13 +286,13 @@ func (s Forge) startScript(ownJava bool) error {
 		pterm.Debug.Println("Runtime jar file:", runJarName)
 
 		if runtime.GOOS == "windows" {
-			_, err = runFile.WriteString(fmt.Sprintf("%s -jar %s -Xmx%dM %s nogui", javaPath, log4jFix, s.Memory.Recommended, runJarName))
+			_, err = runFile.WriteString(fmt.Sprintf("\"%s\" -jar %s -Xmx%dM %s nogui", javaPath, log4jFix, s.Memory.Recommended, runJarName))
 			if err != nil {
 				return err
 			}
 		}
 		if runtime.GOOS == "darwin" || runtime.GOOS == "linux" {
-			_, err = runFile.WriteString(fmt.Sprintf("#!/usr/bin/env sh\n%s -jar %s -Xmx%dM %s nogui", javaPath, log4jFix, s.Memory.Recommended, runJarName))
+			_, err = runFile.WriteString(fmt.Sprintf("#!/usr/bin/env sh\n\"%s\" -jar %s -Xmx%dM %s nogui", javaPath, log4jFix, s.Memory.Recommended, runJarName))
 			if err != nil {
 				return err
 			}

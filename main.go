@@ -331,8 +331,8 @@ func main() {
 	// Ask the user if they want to download java then set the noJava flag depending on their answer
 	var java structs.File
 	jreAlreadyExists := false
-	jrePath, _ := util.GetJavaPath(installDir, modpackVersion.Targets.JavaVersion)
-	if _, err = os.Stat(jrePath); err == nil {
+	jrePath, _ := util.GetJavaPath(modpackVersion.Targets.JavaVersion)
+	if _, err = os.Stat(filepath.Join(installDir, jrePath)); err == nil {
 		jreAlreadyExists = true
 	}
 
@@ -444,7 +444,7 @@ func main() {
 			pterm.Info.MessageStyle,
 		)
 	}
-	if !util.OsJavaExists() {
+	if noJava && !util.OsJavaExists() {
 		// Revisit this, and possibly ask if they want to download java
 		pterm.Warning.Printfln("Java is not installed, skipping modloader installer")
 		skipModloader = true

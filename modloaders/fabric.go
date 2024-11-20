@@ -66,11 +66,13 @@ func (s Fabric) Install(useOwnJava bool) error {
 
 	jrePath := "java"
 	if useOwnJava {
-		jrePath, err = util.GetJavaPath(s.InstallDir, s.Targets.JavaVersion)
+		jrePath, err = util.GetJavaPath(s.Targets.JavaVersion)
 		if err != nil {
 			jrePath = "java"
 		}
 	}
+
+	jrePath = filepath.Join(s.InstallDir, jrePath)
 
 	cmd := exec.Command(jrePath, "-jar", installerName, "server", "-mcversion", s.Targets.McVersion, "-loader", s.Targets.ModLoader.Version, "-downloadMinecraft")
 	cmd.Dir = s.InstallDir
@@ -138,7 +140,7 @@ func (s Fabric) startScript(ownJava bool) error {
 	defer runFile.Close()
 	javaPath := "java"
 	if ownJava {
-		javaPath, err = util.GetJavaPath(s.InstallDir, s.Targets.JavaVersion)
+		javaPath, err = util.GetJavaPath(s.Targets.JavaVersion)
 		if err != nil {
 			javaPath = "java"
 		}
@@ -146,13 +148,13 @@ func (s Fabric) startScript(ownJava bool) error {
 	runJarName := "fabric-server-launch.jar"
 
 	if runtime.GOOS == "windows" {
-		_, err = runFile.WriteString(fmt.Sprintf("%s -jar %s -Xmx%dM %s nogui", javaPath, log4jFix, s.Memory.Recommended, runJarName))
+		_, err = runFile.WriteString(fmt.Sprintf("\"%s\" -jar %s -Xmx%dM %s nogui", javaPath, log4jFix, s.Memory.Recommended, runJarName))
 		if err != nil {
 			return err
 		}
 	}
 	if runtime.GOOS == "darwin" || runtime.GOOS == "linux" {
-		_, err = runFile.WriteString(fmt.Sprintf("#!/usr/bin/env sh\n%s -jar %s -Xmx%dM %s nogui", javaPath, log4jFix, s.Memory.Recommended, runJarName))
+		_, err = runFile.WriteString(fmt.Sprintf("#!/usr/bin/env sh\n\"%s\" -jar %s -Xmx%dM %s nogui", javaPath, log4jFix, s.Memory.Recommended, runJarName))
 		if err != nil {
 			return err
 		}
