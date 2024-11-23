@@ -11,7 +11,7 @@ import (
 )
 
 func Log4JFixer(installDir string, mcVersion string) (string, error) {
-	patchesPath := filepath.Join(installDir, ".patches")
+	patchesPath := filepath.Join(".patches")
 	mcSemVer, err := semVer.NewVersion(mcVersion)
 	if err != nil {
 		return "", err
@@ -24,7 +24,7 @@ func Log4JFixer(installDir string, mcVersion string) (string, error) {
 		return "", err
 	}
 	if !exists {
-		err := os.MkdirAll(patchesPath, os.ModePerm)
+		err := os.MkdirAll(filepath.Join(installDir, patchesPath), os.ModePerm)
 		if err != nil {
 			return "", err
 		}
@@ -38,7 +38,7 @@ func Log4JFixer(installDir string, mcVersion string) (string, error) {
 		}
 		defer get.Body.Close()
 
-		out, err := os.Create(filepath.Join(patchesPath, "log4j2_17-111.xml"))
+		out, err := os.Create(filepath.Join(installDir, patchesPath, "log4j2_17-111.xml"))
 		if err != nil {
 			return "", err
 		}
@@ -60,7 +60,7 @@ func Log4JFixer(installDir string, mcVersion string) (string, error) {
 		}
 		defer get.Body.Close()
 
-		out, err := os.Create(filepath.Join(patchesPath, "log4j2_112-116.xml"))
+		out, err := os.Create(filepath.Join(installDir, patchesPath, "log4j2_112-116.xml"))
 		if err != nil {
 			return "", err
 		}
