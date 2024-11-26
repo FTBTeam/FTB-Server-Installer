@@ -69,11 +69,12 @@ func (s Fabric) Install(useOwnJava bool) error {
 		jrePath, err = util.GetJavaPath(s.Targets.JavaVersion)
 		if err != nil {
 			jrePath = "java"
+		} else {
+			jrePath = filepath.Join(s.InstallDir, jrePath)
 		}
 	}
 
-	jrePath = filepath.Join(s.InstallDir, jrePath)
-
+	pterm.Debug.Printfln("JRE Path: %s", jrePath)
 	cmd := exec.Command(jrePath, "-jar", installerName, "server", "-mcversion", s.Targets.McVersion, "-loader", s.Targets.ModLoader.Version, "-downloadMinecraft")
 	cmd.Dir = s.InstallDir
 	cmd.Stdout = os.Stdout
