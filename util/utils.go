@@ -107,9 +107,23 @@ func IsEmptyDir(path string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	count := len(dir) == 0
-	pterm.Debug.Printfln("Is %s is empty: %t", path, count)
-	return count, nil
+	count := len(dir)
+	pterm.Debug.Printfln("Is %s is empty: %t", path, count == 0)
+
+	// We want to check if the dir is empty or only contains the installer file
+	if count == 0 {
+		return true, nil
+	} else {
+		hasNonInstallerFiles := false
+		installerName := filepath.Base(os.Args[0])
+		for _, f := range dir {
+			if !f.IsDir() && (f.Name() == installerName || f.Name() == "ftb-server-installer.log") {
+				continue
+			}
+			hasNonInstallerFiles = true
+		}
+		return !hasNonInstallerFiles, nil
+	}
 }
 
 func IsEmptyDirRecursive(path string) (bool, error) {
