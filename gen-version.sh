@@ -23,7 +23,7 @@ while read -r file; do
     filename=$(basename "$file")
     if [[ $filename =~ ^ftb-server-([a-zA-Z0-9]+)-([a-zA-Z0-9]+)(\.exe)?$ ]]; then
         bin_name="${BASH_REMATCH[1]}-${BASH_REMATCH[2]}"
-        bin_url="https://cdn.feed-the-beast.com/bin/server-installer/${version}/ftb-server-${bin_name}"
+        bin_url="https://cdn.feed-the-beast.com/bin/server-installer/${version}/ftb-server-${bin_name}${BASH_REMATCH[3]}"
         foundBins["$bin_name"]="$bin_url"
         echo "$bin_name"
     fi
