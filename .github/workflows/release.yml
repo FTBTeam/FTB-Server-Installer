@@ -176,14 +176,6 @@ jobs:
           name: release-freebsd-amd64
           path: release/
 
-      - name: Create latest.json
-        if: "!contains(github.ref_name, 'beta')"
-        shell: bash
-        run: |
-          echo "$PWD"
-          echo "{\"version\": \"$GITHUB_REF_NAME\", \"commit\": \"$GITHUB_SHA_SHORT\"}" > latest.json
-          cat latest.json
-
       - name: Get B2 client
         if: "!contains(github.ref_name, 'beta')"
         shell: bash
@@ -191,13 +183,22 @@ jobs:
           wget -q -O /usr/local/bin/b2 https://github.com/Backblaze/B2_Command_Line_Tool/releases/latest/download/b2-linux
           chmod +x /usr/local/bin/b2
 
+      - name: Create post-body.json
+        if: "!contains(github.ref_name, 'beta')"
+        shell: bash
+        run: |
+          echo "$PWD"
+          bash gen-version.sh
+          cat post-body.json
+          curl -X POST "https://example.com/api/endpoint" -H "Content-Type: application/json" -u "admin:$META_API_TOKEN" -d @./post-body.json
+
+
       - name: Upload
         if: "!contains(github.ref_name, 'beta')"
         shell: bash
         run: |
           ls -la release
           b2 authorize-account ${{ secrets.AWS_ACCESS_KEY_ID }} ${{ secrets.AWS_SECRET_ACCESS_KEY }} > /dev/null 2>&1
-          b2 file upload --no-progress ${{ secrets.PUBLISH_BUCKET }} latest.json bin/server-installer/latest.json
           b2 sync --replace-newer --no-progress release b2://${{ secrets.PUBLISH_BUCKET }}/bin/server-installer/latest/
           b2 sync --replace-newer --no-progress release b2://${{ secrets.PUBLISH_BUCKET }}/bin/server-installer/$GITHUB_REF_NAME/
 
