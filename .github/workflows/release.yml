@@ -183,16 +183,6 @@ jobs:
           wget -q -O /usr/local/bin/b2 https://github.com/Backblaze/B2_Command_Line_Tool/releases/latest/download/b2-linux
           chmod +x /usr/local/bin/b2
 
-      - name: Create post-body.json
-        if: "!contains(github.ref_name, 'beta')"
-        shell: bash
-        run: |
-          echo "$PWD"
-          bash gen-version.sh
-          cat post-body.json
-          curl --fail -X POST "https://example.com/api/endpoint" -H "Content-Type: application/json" -u "admin:$META_API_TOKEN" -d @./post-body.json
-
-
       - name: Upload
         if: "!contains(github.ref_name, 'beta')"
         shell: bash
@@ -201,6 +191,15 @@ jobs:
           b2 authorize-account ${{ secrets.AWS_ACCESS_KEY_ID }} ${{ secrets.AWS_SECRET_ACCESS_KEY }} > /dev/null 2>&1
           b2 sync --replace-newer --no-progress release b2://${{ secrets.PUBLISH_BUCKET }}/bin/server-installer/latest/
           b2 sync --replace-newer --no-progress release b2://${{ secrets.PUBLISH_BUCKET }}/bin/server-installer/$GITHUB_REF_NAME/
+
+      - name: Create post-body.json
+        if: "!contains(github.ref_name, 'beta')"
+        shell: bash
+        run: |
+          echo "$PWD"
+          bash gen-version.sh
+          cat post-body.json
+          curl --fail -X POST "https://api.feed-the-beast.com/v1/meta/versions/server-installer" -H "Content-Type: application/json" -u "admin:$META_API_TOKEN" -d @./post-body.json
 
       # Release to GitHub
       - name: Github Release
