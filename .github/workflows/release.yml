@@ -199,7 +199,7 @@ jobs:
           echo "$PWD"
           bash gen-version.sh
           cat post-body.json
-          curl --fail -X POST "https://api.feed-the-beast.com/v1/meta/versions/server-installer" -H "Content-Type: application/json" -u "admin:$META_API_TOKEN" -d @./post-body.json
+          curl --fail -X POST "https://api.feed-the-beast.com/v1/meta/versions/server-installer" -H "Content-Type: application/json" -u "admin:${{ secrets.META_API_TOKEN}}" -d @./post-body.json
 
       # Release to GitHub
       - name: Github Release
