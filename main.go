@@ -165,7 +165,8 @@ func main() {
 	modpack, err := selectedProvider.GetModpack()
 	if err != nil {
 		selectedProvider.FailedInstall()
-		pterm.Fatal.Println("Error getting modpack:", err.Error())
+		pterm.Error.Println("Error getting modpack:", err.Error())
+		os.Exit(1)
 	}
 	pterm.Debug.Printfln("Modpack: %+v", modpack)
 
@@ -173,7 +174,7 @@ func main() {
 	if versionId == 0 {
 		latestVersion, err := getLatestRelease(modpack.Versions, latest)
 		if err != nil {
-			pterm.Warning.Println("Error getting latest release:", err.Error())
+			pterm.Error.Println("Error getting latest release:", err.Error())
 			os.Exit(1)
 		}
 		selectedProvider.SetVersionId(latestVersion.Id)
@@ -184,8 +185,8 @@ func main() {
 	modpackVersion, err := selectedProvider.GetVersion()
 	if err != nil {
 		selectedProvider.FailedInstall()
-		pterm.Fatal.Println("Error getting modpack version:", err.Error())
-		return
+		pterm.Error.Println("Error getting modpack version:", err.Error())
+		os.Exit(1)
 	}
 	filesToDownload = append(filesToDownload, modpackVersion.Files...)
 
@@ -303,7 +304,8 @@ func main() {
 	modLoader, err := getModLoader(modpackVersion.Targets, modpackVersion.Memory)
 	if err != nil {
 		selectedProvider.FailedInstall()
-		pterm.Fatal.Println("Error getting modloader:", err.Error())
+		pterm.Error.Println("Error getting modloader:", err.Error())
+		os.Exit(1)
 	}
 
 	// Add the modloader downloads to the files list
@@ -393,7 +395,7 @@ func main() {
 	err = doDownload(filesToDownload...)
 	if err != nil {
 		selectedProvider.FailedInstall()
-		pterm.Fatal.Println(err.Error())
+		pterm.Fatal.Printfln(err.Error())
 	}
 
 	pterm.Info.Printfln("Modpack files downloaded")
