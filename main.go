@@ -71,14 +71,14 @@ func main() {
 	flag.IntVar(&versionId, "version", 0, "Modpack version ID, if not provided, the latest version will be used")
 	flag.StringVar(&installDir, "dir", "", "Installation directory")
 	flag.BoolVar(&auto, "auto", false, "Dont ask questions, just install the server")
-	flag.BoolVar(&latest, "latest", false, "Gets the latest version of the modpack")
-	flag.BoolVar(&force, "force", false, "Force the modpack install (only works with -auto)")
+	flag.BoolVar(&latest, "latest", false, "Gets the latest (alpha/beta/release) version of the modpack")
+	flag.BoolVar(&force, "force", false, "Force the modpack install, dont ask questions just continue (only works with -auto)")
 	flag.IntVar(&threads, "threads", runtime.NumCPU()*2, "Number of threads to use (Default: CPU Cores * 2)")
-	flag.StringVar(&apiKey, "apikey", "public", "FTB/CurseForge API key")
+	flag.StringVar(&apiKey, "apikey", "public", "FTB API key (Only for private FTB modpacks)")
 	flag.BoolVar(&validate, "validate", false, "Validate the modpack after install")
 	flag.BoolVar(&skipModloader, "skip-modloader", false, "Skip installing the modloader")
 	flag.BoolVar(&noJava, "no-java", false, "Do not install Java")
-	flag.BoolVar(&noColours, "no-colours", false, "Do not use colours")
+	flag.BoolVar(&noColours, "no-colours", false, "Do not display console/terminal colours")
 	flag.BoolVar(&verbose, "verbose", false, "Verbose output")
 	flag.Parse()
 
@@ -165,7 +165,8 @@ func main() {
 	modpack, err := selectedProvider.GetModpack()
 	if err != nil {
 		selectedProvider.FailedInstall()
-		pterm.Fatal.Println("Error getting modpack:", err.Error())
+		pterm.Error.Println("Error getting modpack:", err.Error())
+		os.Exit(1)
 	}
 	pterm.Debug.Printfln("Modpack: %+v", modpack)
 
@@ -173,7 +174,7 @@ func main() {
 	if versionId == 0 {
 		latestVersion, err := getLatestRelease(modpack.Versions, latest)
 		if err != nil {
-			pterm.Warning.Println("Error getting latest release:", err.Error())
+			pterm.Error.Println("Error getting latest release:", err.Error())
 			os.Exit(1)
 		}
 		selectedProvider.SetVersionId(latestVersion.Id)
@@ -184,8 +185,8 @@ func main() {
 	modpackVersion, err := selectedProvider.GetVersion()
 	if err != nil {
 		selectedProvider.FailedInstall()
-		pterm.Fatal.Println("Error getting modpack version:", err.Error())
-		return
+		pterm.Error.Println("Error getting modpack version:", err.Error())
+		os.Exit(1)
 	}
 	filesToDownload = append(filesToDownload, modpackVersion.Files...)
 
@@ -303,7 +304,8 @@ func main() {
 	modLoader, err := getModLoader(modpackVersion.Targets, modpackVersion.Memory)
 	if err != nil {
 		selectedProvider.FailedInstall()
-		pterm.Fatal.Println("Error getting modloader:", err.Error())
+		pterm.Error.Println("Error getting modloader:", err.Error())
+		os.Exit(1)
 	}
 
 	// Add the modloader downloads to the files list
@@ -393,7 +395,7 @@ func main() {
 	err = doDownload(filesToDownload...)
 	if err != nil {
 		selectedProvider.FailedInstall()
-		pterm.Fatal.Println(err.Error())
+		pterm.Fatal.Printfln(err.Error())
 	}
 
 	pterm.Info.Printfln("Modpack files downloaded")
@@ -536,7 +538,11 @@ func doDownload(files ...structs.File) error {
 				req, err := grab.NewRequest(destPath, reqUrl)
 				if err != nil {
 					pterm.Error.Println(err.Error())
-					return
+					if attempts == len(urls) {
+						pterm.Error.Printfln("Failed to download file: %s\nAll mirrors failed", file.Name)
+						os.Exit(1)
+					}
+					continue
 				}
 				req.NoResume = true
 
@@ -558,7 +564,7 @@ func doDownload(files ...structs.File) error {
 					break
 				} else if resp.Err() != nil {
 					_ = os.Remove(filepath.Join(installDir, file.Path, file.Name))
-					pterm.Warning.Printfln("Failed to download:\nFile: %s (%s)\nError:%s", file.Name, reqUrl, resp.Err().Error())
+					pterm.Warning.Printfln("Failed to download:\nFile: %s (%s)\nResp Status: %s(%d)\nError:%s", file.Name, reqUrl, resp.HTTPResponse.Status, resp.HTTPResponse.StatusCode, resp.Err().Error())
 					if attempts == len(urls) {
 						pterm.Error.Printfln("Failed to download file: %s\nAll mirrors failed", file.Name)
 						os.Exit(1)
