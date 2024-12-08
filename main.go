@@ -538,7 +538,11 @@ func doDownload(files ...structs.File) error {
 				req, err := grab.NewRequest(destPath, reqUrl)
 				if err != nil {
 					pterm.Error.Println(err.Error())
-					return
+					if attempts == len(urls) {
+						pterm.Error.Printfln("Failed to download file: %s\nAll mirrors failed", file.Name)
+						os.Exit(1)
+					}
+					continue
 				}
 				req.NoResume = true
 
