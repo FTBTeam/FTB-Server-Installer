@@ -89,6 +89,15 @@ func main() {
 	}
 
 	util.LogMw = io.MultiWriter(os.Stdout, util.NewCustomWriter(logFile))
+	// Temp fix for loggers not logging to file
+	pterm.Debug.Writer = nil
+	pterm.Info.Writer = nil
+	pterm.Warning.Writer = nil
+	pterm.Error.Writer = nil
+	pterm.Fatal.Writer = nil
+	pterm.Success.Writer = nil
+	pterm.Description.Writer = nil
+
 	pterm.SetDefaultOutput(util.LogMw)
 
 	pterm.Debug.Prefix = pterm.Prefix{
@@ -366,7 +375,7 @@ func main() {
 		for _, f := range removedFiles {
 			err := os.Remove(filepath.Join(installDir, f.Path, f.Name))
 			if err != nil {
-				pterm.Error.Println(err.Error())
+				pterm.Error.Printfln("Removing files error: %s", err.Error())
 				continue
 			}
 		}
@@ -375,7 +384,7 @@ func main() {
 		for _, f := range updatedFiles {
 			err := os.Remove(filepath.Join(installDir, f.Path, f.Name))
 			if err != nil {
-				pterm.Error.Println(err.Error())
+				pterm.Error.Printfln("Removing update files error: %s", err.Error())
 				continue
 			}
 		}
@@ -537,7 +546,7 @@ func doDownload(files ...structs.File) error {
 
 				req, err := grab.NewRequest(destPath, reqUrl)
 				if err != nil {
-					pterm.Error.Println(err.Error())
+					pterm.Error.Printfln("Download request error: %s", err.Error())
 					if attempts == len(urls) {
 						pterm.Error.Printfln("Failed to download file: %s\nAll mirrors failed", file.Name)
 						os.Exit(1)
