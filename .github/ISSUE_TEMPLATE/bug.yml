@@ -1,12 +1,14 @@
 name: Bug report
 description: Report an issue with the server installer
 title: '[Bug]: '
+labels:
+  - 'Bug'
 body:
   - type: textarea
     id: logfiles
     attributes:
       label: Log Files
-      description: Link(s) or upload of the ftb-server-installer.log
+      description: Drag and drop the ftb-server-installer.log file here or link to a gist/hastebin/pastebin/ect
       placeholder: >-
         Either drag and drop the log file here or upload it to a pastebin site
         and paste a link here
