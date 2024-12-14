@@ -1,0 +1,17 @@
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  add_remove_label:
+    runs-on: ubuntu-latest
+    name: Add/remove awaiting reply label
+    steps:
+      - name: Toggle label
+        uses: FTBTeam/awaiting-reply-action@main
+        with:
+          awaiting-label: "Awaiting Reply"
+          replied-label: "Replied"
+#          ignore-labels: "On Hold,state: Mod Update Available,state: Confirmed,state: Awaiting Mod Update,Reported to Mod Dev"
+          remove-labels: "Stale"
+          ignore-string: "!skip"
