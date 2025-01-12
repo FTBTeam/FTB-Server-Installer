@@ -218,7 +218,7 @@ func main() {
 	mkdir := true
 	if !exists {
 		if !auto {
-			mkdir = util.ConfirmYN("Install folder does not exists, do you want to create it?", true, pterm.Info.MessageStyle)
+			mkdir = util.ConfirmYN(fmt.Sprintf("Install folder does not exists, do you want to create it? (%s)", installDir), true, pterm.Info.MessageStyle)
 			if !mkdir {
 				pterm.Error.Println("Installation path does not exist...")
 				os.Exit(1)
