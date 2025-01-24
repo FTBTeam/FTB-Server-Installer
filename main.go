@@ -218,7 +218,7 @@ func main() {
 	mkdir := true
 	if !exists {
 		if !auto {
-			mkdir = util.ConfirmYN("Install folder does not exists, do you want to create it?", true, pterm.Info.MessageStyle)
+			mkdir = util.ConfirmYN(fmt.Sprintf("Install folder does not exists, do you want to create it? (%s)", installDir), true, pterm.Info.MessageStyle)
 			if !mkdir {
 				pterm.Error.Println("Installation path does not exist...")
 				os.Exit(1)
@@ -266,6 +266,11 @@ func main() {
 				pterm.Fatal.Println("Error reading manifest:", err.Error())
 			}
 
+			/*
+				Check the manifest to see if its the same modpack installed, if its not the same modpack then ask the user
+				if they intened to install a different modpack and the issues that can arrise for it.
+				If auto is specified but not the force flag show a warning and exit
+			*/
 			isSamePack := isSameModpack(existingManifest, manifest)
 
 			if !isSamePack {
@@ -283,6 +288,9 @@ func main() {
 				}
 			}
 
+			/*
+				Check if the modpack is the same version, if it's not compute the differences based on the manifest
+			*/
 			sameVersion := isSameModpackVersion(existingManifest, manifest)
 
 			if !sameVersion && isSamePack {
@@ -389,7 +397,7 @@ func main() {
 			}
 		}
 
-		// Remove unchanged files from filesToDownload
+		// Remove unchanged files from filesToDownload, we dont want to r edownload unchanged files
 		for _, f := range unchangedFiles {
 			for i, v := range filesToDownload {
 				if v.Name == f.Name && v.Path == f.Path {
@@ -567,17 +575,21 @@ func doDownload(files ...structs.File) error {
 					}
 				}
 
-				resp := grab.DefaultClient.Do(req)
-				if resp.Err() == nil {
-					pterm.Debug.Printfln("Downloaded file: %s", file.Name)
-					break
-				} else if resp.Err() != nil {
+				grabClient := grab.NewClient()
+				grabClient.UserAgent = util.UserAgent
+				resp := grabClient.Do(req)
+				if err = resp.Err(); err != nil {
 					_ = os.Remove(filepath.Join(installDir, file.Path, file.Name))
-					pterm.Warning.Printfln("Failed to download:\nFile: %s (%s)\nResp Status: %s(%d)\nError:%s", file.Name, reqUrl, resp.HTTPResponse.Status, resp.HTTPResponse.StatusCode, resp.Err().Error())
+					pterm.Warning.Printfln("Failed to download:\nFile: %s (%s)\nResp Status: %s(%d)\nError:%s", file.Name, reqUrl, resp.HTTPResponse.Status, resp.HTTPResponse.StatusCode, err.Error())
 					if attempts == len(urls) {
 						pterm.Error.Printfln("Failed to download file: %s\nAll mirrors failed", file.Name)
 						os.Exit(1)
 					}
+				} else if err == nil {
+					pterm.Debug.Printfln("Downloaded file: %s", file.Name)
+					break
+				} else {
+					pterm.Fatal.Printfln("We should not be here\nError downloading file: %s", err.Error())
 				}
 			}
 		}()
