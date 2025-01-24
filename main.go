@@ -575,17 +575,21 @@ func doDownload(files ...structs.File) error {
 					}
 				}
 
-				resp := grab.DefaultClient.Do(req)
-				if resp.Err() == nil {
-					pterm.Debug.Printfln("Downloaded file: %s", file.Name)
-					break
-				} else if resp.Err() != nil {
+				grabClient := grab.NewClient()
+				grabClient.UserAgent = util.UserAgent
+				resp := grabClient.Do(req)
+				if err = resp.Err(); err != nil {
 					_ = os.Remove(filepath.Join(installDir, file.Path, file.Name))
-					pterm.Warning.Printfln("Failed to download:\nFile: %s (%s)\nResp Status: %s(%d)\nError:%s", file.Name, reqUrl, resp.HTTPResponse.Status, resp.HTTPResponse.StatusCode, resp.Err().Error())
+					pterm.Warning.Printfln("Failed to download:\nFile: %s (%s)\nResp Status: %s(%d)\nError:%s", file.Name, reqUrl, resp.HTTPResponse.Status, resp.HTTPResponse.StatusCode, err.Error())
 					if attempts == len(urls) {
 						pterm.Error.Printfln("Failed to download file: %s\nAll mirrors failed", file.Name)
 						os.Exit(1)
 					}
+				} else if err == nil {
+					pterm.Debug.Printfln("Downloaded file: %s", file.Name)
+					break
+				} else {
+					pterm.Fatal.Printfln("We should not be here\nError downloading file: %s", err.Error())
 				}
 			}
 		}()
