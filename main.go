@@ -266,6 +266,11 @@ func main() {
 				pterm.Fatal.Println("Error reading manifest:", err.Error())
 			}
 
+			/*
+				Check the manifest to see if its the same modpack installed, if its not the same modpack then ask the user
+				if they intened to install a different modpack and the issues that can arrise for it.
+				If auto is specified but not the force flag show a warning and exit
+			*/
 			isSamePack := isSameModpack(existingManifest, manifest)
 
 			if !isSamePack {
@@ -283,6 +288,9 @@ func main() {
 				}
 			}
 
+			/*
+				Check if the modpack is the same version, if it's not compute the differences based on the manifest
+			*/
 			sameVersion := isSameModpackVersion(existingManifest, manifest)
 
 			if !sameVersion && isSamePack {
@@ -389,7 +397,7 @@ func main() {
 			}
 		}
 
-		// Remove unchanged files from filesToDownload
+		// Remove unchanged files from filesToDownload, we dont want to r edownload unchanged files
 		for _, f := range unchangedFiles {
 			for i, v := range filesToDownload {
 				if v.Name == f.Name && v.Path == f.Path {

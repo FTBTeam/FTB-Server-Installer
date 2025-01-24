@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.0.12
+- Show install path on missing folder question
+
 ## 1.0.11
 - Updated packages
   - Fixes issue with showing error/debug messages while the progress bar is being shown
