@@ -23,7 +23,7 @@ jobs:
 
       - name: Build
         run: |
-          $env:CGO_ENABLED='0'; $env:GOOS='${{ matrix.goos }}'; $env:GOARCH='${{ matrix.goarch }}'; go build -o out/ftb-server-${{ matrix.goos }}-${{ matrix.goarch }}.exe -trimpath -buildvcs=false -ldflags "-s -w -X 'ftb-server-downloader/util.GitCommit=$env:GITHUB_SHA_SHORT' -X 'ftb-server-downloader/util.ReleaseVersion=$env:GITHUB_REF_NAME'"
+          $env:CGO_ENABLED='0'; $env:GOOS='${{ matrix.goos }}'; $env:GOARCH='${{ matrix.goarch }}'; go build -o out/ftb-server-${{ matrix.goos }}-${{ matrix.goarch }}.exe -ldflags "-X 'ftb-server-downloader/util.GitCommit=$env:GITHUB_SHA_SHORT' -X 'ftb-server-downloader/util.ReleaseVersion=$env:GITHUB_REF_NAME'"
 
       - name: Windows Signing
         run: |
@@ -51,7 +51,7 @@ jobs:
 
       - name: Build
         run: |
-          CGO_ENABLED=0 GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -o out/ftb-server-${{ matrix.goos }}-${{ matrix.goarch }} -trimpath -buildvcs=false -ldflags "-s -w -X 'ftb-server-downloader/util.GitCommit=$GITHUB_SHA_SHORT' -X 'ftb-server-downloader/util.ReleaseVersion=$GITHUB_REF_NAME'"
+          CGO_ENABLED=0 GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -o out/ftb-server-${{ matrix.goos }}-${{ matrix.goarch }} -ldflags "-X 'ftb-server-downloader/util.GitCommit=$GITHUB_SHA_SHORT' -X 'ftb-server-downloader/util.ReleaseVersion=$GITHUB_REF_NAME'"
           chmod +x out/ftb-server-${{ matrix.goos }}-${{ matrix.goarch }}
 
       - name: Apple Certificate
@@ -107,7 +107,7 @@ jobs:
 
       - name: Build
         run: |
-          CGO_ENABLED=0 GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -o out/ftb-server-${{ matrix.goos }}-${{ matrix.goarch }} -trimpath -buildvcs=false -ldflags "-s -w -X 'ftb-server-downloader/util.GitCommit=$GITHUB_SHA_SHORT' -X 'ftb-server-downloader/util.ReleaseVersion=$GITHUB_REF_NAME'"
+          CGO_ENABLED=0 GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -o out/ftb-server-${{ matrix.goos }}-${{ matrix.goarch }} -ldflags "-X 'ftb-server-downloader/util.GitCommit=$GITHUB_SHA_SHORT' -X 'ftb-server-downloader/util.ReleaseVersion=$GITHUB_REF_NAME'"
           chmod +x out/ftb-server-${{ matrix.goos }}-${{ matrix.goarch }}
 
       - name: Upload artifact
