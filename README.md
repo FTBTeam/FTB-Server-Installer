@@ -42,3 +42,7 @@ Open up a terminal and navigate to the directory where the installer is located.
 | `-no-java`        | `false`              | If set, installer wont download a copy of java                                                                      |
 | `-no-colours`     | `false`              | Removes the colour formatting from the console output                                                               |
 | `-verbose`        | `false`              | Enables debug logging                                                                                               |
+
+## Looking for a Modded Minecraft Server? `Ad`
+
+[![Promotion](https://cdn.feed-the-beast.com/assets/promo/ftb-bh-promo-large.png)](https://bisecthosting.com/ftb)
