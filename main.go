@@ -587,7 +587,7 @@ func doDownload(files ...structs.File) error {
 					break
 				} else if resp.Err() != nil {
 					_ = os.Remove(filepath.Join(installDir, file.Path, file.Name))
-					pterm.Warning.Printfln("Failed to download:\nFile: %s (%s)\nResp Status: %s(%d)\nError:%s", file.Name, reqUrl, resp.HTTPResponse.Status, resp.HTTPResponse.StatusCode, resp.Err().Error())
+					pterm.Warning.Printfln("Failed to download:\nFile: %s (%s)\nResp Status: %s (%d)\nError: %s", file.Name, reqUrl, resp.HTTPResponse.Status, resp.HTTPResponse.StatusCode, resp.Err().Error())
 					if attempts == len(urls) {
 						pterm.Error.Printfln("Failed to download file: %s\nAll mirrors failed", file.Name)
 						os.Exit(1)
