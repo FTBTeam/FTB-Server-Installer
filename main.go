@@ -418,7 +418,7 @@ func main() {
 	err = doDownload(filesToDownload...)
 	if err != nil {
 		selectedProvider.FailedInstall()
-		pterm.Fatal.Printfln(err.Error())
+		pterm.Fatal.Println(err.Error())
 	}
 
 	pterm.Info.Printfln("Modpack files downloaded")
@@ -613,7 +613,8 @@ func runValidation(manifest structs.Manifest) error {
 				continue
 			}
 			if fileHash != f.Hash {
-				pterm.Warning.Printfln(fmt.Sprintf("Unexpected file hash from %s\nExpected: %s\nGot: %s", f.Name, f.Hash, fileHash))
+
+				pterm.Warning.Printfln("Unexpected file hash from %s\nExpected: %s\nGot: %s", f.Name, f.Hash, fileHash)
 				invalidFiles = append(invalidFiles, f)
 			}
 		}
