@@ -18,6 +18,7 @@ import (
 	"github.com/pterm/pterm"
 	"github.com/pterm/pterm/putils"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -104,6 +105,7 @@ func main() {
 	pterm.Success.Writer = nil
 	pterm.Description.Writer = nil
 
+	log.SetOutput(util.LogMw)
 	pterm.SetDefaultOutput(util.LogMw)
 
 	pterm.Debug.Prefix = pterm.Prefix{
@@ -164,7 +166,9 @@ func main() {
 			}
 		}
 		packId = pId
-		versionId = vId
+		if vId != 0 && versionId != 0 {
+			versionId = vId
+		}
 	}
 
 	// Get the provider
