@@ -18,6 +18,7 @@ import (
 	"github.com/pterm/pterm"
 	"github.com/pterm/pterm/putils"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -104,6 +105,7 @@ func main() {
 	pterm.Success.Writer = nil
 	pterm.Description.Writer = nil
 
+	log.SetOutput(util.LogMw)
 	pterm.SetDefaultOutput(util.LogMw)
 
 	pterm.Debug.Prefix = pterm.Prefix{
@@ -164,7 +166,9 @@ func main() {
 			}
 		}
 		packId = pId
-		versionId = vId
+		if vId != 0 && versionId == 0 {
+			versionId = vId
+		}
 	}
 
 	// Get the provider
@@ -185,15 +189,15 @@ func main() {
 	}
 	pterm.Debug.Printfln("Modpack: %+v", modpack)
 
-	// Get the latest version id if not provided
-	if versionId == 0 {
+	// Get the latest version id if not provided or if the latest flag is set
+	if versionId == 0 || latest {
 		latestVersion, err := getLatestRelease(modpack.Versions, latest)
 		if err != nil {
 			pterm.Error.Println("Error getting latest release:", err.Error())
 			os.Exit(1)
 		}
 		selectedProvider.SetVersionId(latestVersion.Id)
-		pterm.Info.Printfln("No version provided, using latest version: %d", latestVersion.Id)
+		pterm.Debug.Printfln("No version provided or latest flag set, using latest version: %d", latestVersion.Id)
 	}
 
 	// Get the version information for the modpack from the provider
@@ -513,9 +517,10 @@ func main() {
 
 // getProvider Gets and sets up the repo provider
 func getProvider() (repos.ModpackRepo, error) {
+	util.ApiKey = apiKey
 	switch provider {
 	case "ftb":
-		return repos.GetFTB(packId, versionId, apiKey), nil
+		return repos.GetFTB(packId, versionId), nil
 	// case "curseforge":
 	//	return repos.GetCurseForge(packId, versionId), nil
 	default:
