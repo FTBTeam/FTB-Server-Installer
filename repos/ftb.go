@@ -17,19 +17,17 @@ const (
 type FTB struct {
 	PackId    int
 	VersionId int
-	ApiKey    string
 }
 
-func GetFTB(packId, versionId int, apiKey string) *FTB {
+func GetFTB(packId, versionId int) *FTB {
 	return &FTB{
 		PackId:    packId,
 		VersionId: versionId,
-		ApiKey:    apiKey,
 	}
 }
 
 func (m *FTB) GetModpack() (structs.Modpack, error) {
-	url := fmt.Sprintf("%s/modpack/%d", makeFTBUrl(m), m.PackId)
+	url := fmt.Sprintf("%s/modpack/%d", ftbApiUrl, m.PackId)
 	pterm.Debug.Printfln("Getting modpack from ftb using %s", url)
 	resp, err := util.DoGet(url)
 	if err != nil {
@@ -69,7 +67,7 @@ func (m *FTB) GetModpack() (structs.Modpack, error) {
 }
 
 func (m *FTB) GetVersion() (structs.ModpackVersion, error) {
-	url := fmt.Sprintf("%s/modpack/%d/%d", makeFTBUrl(m), m.PackId, m.VersionId)
+	url := fmt.Sprintf("%s/modpack/%d/%d", ftbApiUrl, m.PackId, m.VersionId)
 	pterm.Debug.Printfln("Getting modpack version from ftb using %s", url)
 	resp, err := util.DoGet(url)
 	if err != nil {
@@ -102,7 +100,7 @@ func (m *FTB) GetVersion() (structs.ModpackVersion, error) {
 }
 
 func (m *FTB) SuccessfulInstall() {
-	url := fmt.Sprintf("%s/modpack/%d/%d/serverInstall/success", makeFTBUrl(m), m.PackId, m.VersionId)
+	url := fmt.Sprintf("%s/modpack/%d/%d/serverInstall/success", ftbApiUrl, m.PackId, m.VersionId)
 	_, err := util.DoGet(url)
 	if err != nil {
 		pterm.Debug.WithMessageStyle(pterm.Error.MessageStyle).Printfln("Error while sending successful install request to ftb: %s", err)
@@ -110,7 +108,7 @@ func (m *FTB) SuccessfulInstall() {
 }
 
 func (m *FTB) FailedInstall() {
-	url := fmt.Sprintf("%s/modpack/%d/%d/serverInstall/failure", makeFTBUrl(m), m.PackId, m.VersionId)
+	url := fmt.Sprintf("%s/modpack/%d/%d/serverInstall/failure", ftbApiUrl, m.PackId, m.VersionId)
 	_, err := util.DoGet(url)
 	if err != nil {
 		pterm.Debug.WithMessageStyle(pterm.Error.MessageStyle).Printfln("Error while sending failed install request to ftb: %s", err)
@@ -121,9 +119,9 @@ func (m *FTB) SetVersionId(versionId int) {
 	m.VersionId = versionId
 }
 
-func makeFTBUrl(m *FTB) string {
-	return fmt.Sprintf("%s/%s", ftbApiUrl, m.ApiKey)
-}
+//func makeFTBUrl(m *FTB) string {
+//	return fmt.Sprintf("%s/%s", ftbApiUrl, m.ApiKey)
+//}
 
 func parseFTBTargets(targets []structs.FTBTargets) structs.ModpackTargets {
 	var modpackTargets structs.ModpackTargets

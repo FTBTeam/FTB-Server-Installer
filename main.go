@@ -517,9 +517,10 @@ func main() {
 
 // getProvider Gets and sets up the repo provider
 func getProvider() (repos.ModpackRepo, error) {
+	util.ApiKey = apiKey
 	switch provider {
 	case "ftb":
-		return repos.GetFTB(packId, versionId, apiKey), nil
+		return repos.GetFTB(packId, versionId), nil
 	// case "curseforge":
 	//	return repos.GetCurseForge(packId, versionId), nil
 	default:

@@ -32,6 +32,7 @@ const (
 var (
 	ReleaseVersion string
 	GitCommit      string
+	ApiKey         string
 	UserAgent      string
 	LogMw          io.Writer
 )
@@ -61,6 +62,9 @@ func makeRequest(method, url string, requestHeaders map[string][]string) (*http.
 	headers := map[string][]string{}
 	for k, v := range requestHeaders {
 		headers[k] = v
+	}
+	if ApiKey != "public" && strings.Contains(url, "api.feed-the-beast.com") {
+		headers["x-api-key"] = []string{ApiKey}
 	}
 	client := &http.Client{}
 	req, err := http.NewRequest(method, url, nil)
