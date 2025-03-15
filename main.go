@@ -586,7 +586,24 @@ func doDownload(files ...structs.File) error {
 					}
 				}
 
+				if req == nil {
+					pterm.Error.Printfln("Download request %s is nil", file.Name)
+					if attempts == len(urls) {
+						pterm.Error.Printfln("Failed to download file: %s\nAll mirrors failed", file.Name)
+						os.Exit(1)
+					}
+					continue
+				}
+
 				resp := grab.DefaultClient.Do(req)
+				if resp == nil {
+					pterm.Error.Printfln("Download response %s is nil", file.Name)
+					if attempts == len(urls) {
+						pterm.Error.Printfln("Failed to download file: %s\nAll mirrors failed", file.Name)
+						os.Exit(1)
+					}
+					continue
+				}
 				if resp.Err() == nil {
 					pterm.Debug.Printfln("Downloaded file: %s", file.Name)
 					break
@@ -597,6 +614,7 @@ func doDownload(files ...structs.File) error {
 						pterm.Error.Printfln("Failed to download file: %s\nAll mirrors failed", file.Name)
 						os.Exit(1)
 					}
+					continue
 				}
 			}
 		}()
