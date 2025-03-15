@@ -586,17 +586,39 @@ func doDownload(files ...structs.File) error {
 					}
 				}
 
+				if req == nil {
+					pterm.Error.Printfln("Download request %s is nil", file.Name)
+					if attempts == len(urls) {
+						pterm.Error.Printfln("Failed to download file: %s\nAll mirrors failed", file.Name)
+						os.Exit(1)
+					}
+					continue
+				}
+
 				resp := grab.DefaultClient.Do(req)
+				if resp == nil {
+					pterm.Error.Printfln("Download response %s is nil", file.Name)
+					if attempts == len(urls) {
+						pterm.Error.Printfln("Failed to download file: %s\nAll mirrors failed", file.Name)
+						os.Exit(1)
+					}
+					continue
+				}
 				if resp.Err() == nil {
 					pterm.Debug.Printfln("Downloaded file: %s", file.Name)
 					break
 				} else if resp.Err() != nil {
 					_ = os.Remove(filepath.Join(installDir, file.Path, file.Name))
-					pterm.Warning.Printfln("Failed to download:\nFile: %s (%s)\nResp Status: %s (%d)\nError: %s", file.Name, reqUrl, resp.HTTPResponse.Status, resp.HTTPResponse.StatusCode, resp.Err().Error())
+					respStatus := "Nil"
+					if resp.HTTPResponse != nil {
+						respStatus = strconv.Itoa(resp.HTTPResponse.StatusCode)
+					}
+					pterm.Warning.Printfln("Failed to download:\nFile: %s (%s)\nResp Status: %s\nError: %s", file.Name, reqUrl, respStatus, resp.Err().Error())
 					if attempts == len(urls) {
 						pterm.Error.Printfln("Failed to download file: %s\nAll mirrors failed", file.Name)
 						os.Exit(1)
 					}
+					continue
 				}
 			}
 		}()
