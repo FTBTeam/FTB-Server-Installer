@@ -26,7 +26,7 @@ jobs:
 
       - name: Build
         run: |
-          CGO_ENABLED=0 GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -o out/ftb-server-${{ matrix.goos }}-${{ matrix.goarch }} -trimpath -buildvcs=false -ldflags "-s -w -X 'ftb-server-downloader/util.GitCommit=${{env.GITHUB_SHA_SHORT}}' -X 'ftb-server-downloader/util.ReleaseVersion=${{env.GITHUB_REF_NAME}}'"
+          CGO_ENABLED=0 GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -o out/ftb-server-${{ matrix.goos }}-${{ matrix.goarch }} -ldflags "-X 'ftb-server-downloader/util.GitCommit=$GITHUB_SHA_SHORT' -X 'ftb-server-downloader/util.ReleaseVersion=99.99.99-Dev'"
 
       - name: Archive production artifacts
         uses: actions/upload-artifact@v4
