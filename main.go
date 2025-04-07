@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/sha1"
 	"crypto/sha256"
+	"crypto/tls"
 	"encoding/hex"
 	"errors"
 	"flag"
@@ -19,6 +20,7 @@ import (
 	"github.com/pterm/pterm/putils"
 	"io"
 	"log"
+	"net/http"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -43,6 +45,7 @@ var (
 	skipModloader bool
 	noJava        bool
 	noColours     bool
+	dlTimeout     int
 	verbose       bool
 
 	logFile *os.File
@@ -81,6 +84,7 @@ func main() {
 	flag.BoolVar(&noJava, "no-java", false, "Do not install Java")
 	justFiles := flag.Bool("just-files", false, "Only download the files, do not install java or the modloader")
 	flag.BoolVar(&noColours, "no-colours", false, "Do not display console/terminal colours")
+	flag.IntVar(&dlTimeout, "timeout", 60, "File download timeout in seconds")
 	flag.BoolVar(&verbose, "verbose", false, "Verbose output")
 	flag.Parse()
 
@@ -554,7 +558,6 @@ func doDownload(files ...structs.File) error {
 		threadLimit <- 1
 		go func() {
 			defer func() { wg.Done(); <-threadLimit; pCount.Add(1); p.Current = int(pCount.Load()) }()
-			grab.DefaultClient.UserAgent = util.UserAgent
 			destPath := filepath.Join(installDir, file.Path, file.Name)
 			urls := append([]string{file.Url}, file.Mirrors...)
 			var attempts = 0
@@ -595,7 +598,16 @@ func doDownload(files ...structs.File) error {
 					continue
 				}
 
-				resp := grab.DefaultClient.Do(req)
+				grabClient := grab.NewClient()
+				grabClient.UserAgent = util.UserAgent
+				grabClient.HTTPClient = &http.Client{
+					Timeout: 60 * time.Second,
+					Transport: &http.Transport{
+						Proxy:        http.ProxyFromEnvironment,
+						TLSNextProto: make(map[string]func(string, *tls.Conn) http.RoundTripper),
+					},
+				}
+				resp := grabClient.Do(req)
 				if resp == nil {
 					pterm.Error.Printfln("Download response %s is nil", file.Name)
 					if attempts == len(urls) {
