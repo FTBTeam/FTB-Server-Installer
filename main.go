@@ -84,7 +84,7 @@ func main() {
 	flag.BoolVar(&noJava, "no-java", false, "Do not install Java")
 	justFiles := flag.Bool("just-files", false, "Only download the files, do not install java or the modloader")
 	flag.BoolVar(&noColours, "no-colours", false, "Do not display console/terminal colours")
-	flag.IntVar(&dlTimeout, "timeout", 60, "File download timeout in seconds")
+	flag.IntVar(&dlTimeout, "timeout", 120, "File download timeout in seconds")
 	flag.BoolVar(&verbose, "verbose", false, "Verbose output")
 	flag.Parse()
 
@@ -601,7 +601,7 @@ func doDownload(files ...structs.File) error {
 				grabClient := grab.NewClient()
 				grabClient.UserAgent = util.UserAgent
 				grabClient.HTTPClient = &http.Client{
-					Timeout: 60 * time.Second,
+					Timeout: time.Duration(dlTimeout) * time.Second,
 					Transport: &http.Transport{
 						Proxy:        http.ProxyFromEnvironment,
 						TLSNextProto: make(map[string]func(string, *tls.Conn) http.RoundTripper),
