@@ -208,6 +208,14 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
+          while read -r file; do
+            filename=$(basename "$file")
+            if [[ $filename =~ ^ftb-server-([a-zA-Z0-9]+)-([a-zA-Z0-9]+)(\.exe)?$ ]]; then
+              sha256=$(sha256sum "$file" | cut -d ' ' -f 1)
+              echo "$sha256" > "$file".sha256
+              echo "SHA256 checksum for $file: $sha256"
+            fi
+          done < <(find release -type f)
           gh release create $GITHUB_REF_NAME --title $GITHUB_REF_NAME --notes "Latest version of the server installer" --generate-notes release/*
 
       - name: Github PreRelease
@@ -216,4 +224,12 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
+          while read -r file; do
+            filename=$(basename "$file")
+            if [[ $filename =~ ^ftb-server-([a-zA-Z0-9]+)-([a-zA-Z0-9]+)(\.exe)?$ ]]; then
+              sha256=$(sha256sum "$file" | cut -d ' ' -f 1)
+              echo "$sha256" > "$file".sha256
+              echo "SHA256 checksum for $file: $sha256"
+            fi
+          done < <(find release -type f)
           gh release create $GITHUB_REF_NAME --prerelease --title $GITHUB_REF_NAME --notes "Latest version of the server installer" --generate-notes release/*
