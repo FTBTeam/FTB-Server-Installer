@@ -132,13 +132,28 @@ func main() {
 
 	versionInfo, err := checkForUpdate()
 	if err != nil {
-		pterm.Warning.Printfln("Error checking for update: %v", err)
+		pterm.Warning.Printfln("Error checking for installer update: %v", err)
 	}
 	if versionInfo.UpdateAvailable {
-		pterm.Info.Printfln("Update available:\nCurrent version: %s\nLatest version: %s", versionInfo.CurrentVersion, versionInfo.LatestVersion)
-		doUpdate(versionInfo)
+		pterm.Info.Printfln("Installer update available:\nCurrent version: %s\nLatest version: %s", versionInfo.CurrentVersion, versionInfo.LatestVersion)
+		pterm.Println()
+		// Skip the update auto flag is set
+		if !auto {
+			update := util.ConfirmYN(
+				fmt.Sprintf("Do you want to update the installer to version %s?", versionInfo.LatestVersion),
+				true,
+				pterm.Info.MessageStyle,
+			)
+			if update {
+				pterm.Info.Println("Downloading update...")
+				err = doUpdate(versionInfo)
+				if err != nil {
+					pterm.Error.Printfln("Error updating installer: %s", err.Error())
+
+				}
+			}
+		}
 	}
-	os.Exit(1)
 
 	if verbose {
 		pterm.EnableDebugMessages()

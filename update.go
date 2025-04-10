@@ -1,13 +1,17 @@
 package main
 
 import (
+	"bytes"
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"ftb-server-downloader/util"
 	semver "github.com/hashicorp/go-version"
+	"github.com/minio/selfupdate"
 	"github.com/pterm/pterm"
 	"io"
 	"net/http"
+	"os"
 	"runtime"
 	"strings"
 )
@@ -85,7 +89,7 @@ func checkForUpdate() (VersionInfo, error) {
 	return versionInfo, nil
 }
 
-func doUpdate(versionInfo VersionInfo) {
+func doUpdate(versionInfo VersionInfo) error {
 	filename := fmt.Sprintf("ftb-server-%s-%s", strings.ToLower(runtime.GOOS), strings.ToLower(runtime.GOARCH))
 	if runtime.GOOS == "windows" {
 		filename += ".exe"
@@ -94,29 +98,45 @@ func doUpdate(versionInfo VersionInfo) {
 	downloadUrl := fmt.Sprintf("https://github.com/%s/%s/releases/download/%s/%s", org, repo, versionInfo.LatestVersion, filename)
 	hashResp, err := http.Get(fmt.Sprintf("%s.sha256", downloadUrl))
 	if err != nil {
-		pterm.Error.Println("Error downloading hash: ", err.Error())
-		return
+		return fmt.Errorf("error downloading hash: %s", err.Error())
 	}
 	defer hashResp.Body.Close()
 	if hashResp.StatusCode != http.StatusOK {
-		pterm.Error.Println("Error downloading hash: ", hashResp.Status)
-		return
+		return fmt.Errorf("error downloading hash: %s", hashResp.Status)
 	}
-	hashData, err := io.ReadAll(hashResp.Body)
+	hashBytes, err := io.ReadAll(hashResp.Body)
 	if err != nil {
-		pterm.Error.Println("Error reading hash response: ", err.Error())
-		return
+		return fmt.Errorf("error reading hash response: %s", err.Error())
 	}
-	pterm.Debug.Println("Update Hash: ", string(hashData))
+	updateHash := string(hashBytes)
+	pterm.Debug.Println("Update Hash: ", string(updateHash))
 
 	resp, err := http.Get(downloadUrl)
 	if err != nil {
-		pterm.Error.Println("Error downloading update: ", err.Error())
-		return
+		return fmt.Errorf("error downloading update: %s", err.Error())
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		pterm.Error.Println("Error downloading update: ", resp.Status)
-		return
+		return fmt.Errorf("error downloading update: %s", resp.Status)
 	}
+
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("error reading update response: %s", err.Error())
+	}
+
+	binHashByte := sha256.Sum256(data)
+	binHash := fmt.Sprintf("%x", binHashByte)
+
+	if updateHash != binHash {
+		return fmt.Errorf("update hash does not match")
+	}
+	err = selfupdate.Apply(bytes.NewReader(data), selfupdate.Options{})
+	if err != nil {
+		return fmt.Errorf("error applying update: %s", err.Error())
+	}
+
+	pterm.Success.Println("Update successful!\nPlease restart the program to use the new version.")
+	os.Exit(0)
+	return nil
 }
