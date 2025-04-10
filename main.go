@@ -130,23 +130,16 @@ func main() {
 	pterm.DefaultCenter.WithCenterEachLineSeparately().Printfln("Server installer version: %s(%s)\n%s", util.ReleaseVersion, util.GitCommit, time.Now().UTC().Format(time.RFC1123))
 	pterm.DefaultCenter.WithCenterEachLineSeparately().Println(pterm.Bold.Sprintf("Installer Issue tracker\nhttps://github.com/FTBTeam/FTB-Server-Installer/issues"))
 
-	updateAvailable, err := util.CheckForUpdate()
+	versionInfo, err := checkForUpdate()
 	if err != nil {
 		pterm.Warning.Printfln("Error checking for update: %v", err)
 	}
-	if updateAvailable {
-		ext := ""
-		if runtime.GOOS == "windows" {
-			ext = ".exe"
-		}
-		installerName := fmt.Sprintf("ftb-server-%s-%s%s", runtime.GOOS, runtime.GOARCH, ext)
-		updateUrl := fmt.Sprintf("https://cdn.feed-the-beast.com/bin/server-installer/latest/%s", installerName)
-
-		updateStyle := pterm.NewStyle(pterm.FgLightMagenta, pterm.Bold)
-		updateURLStyle := pterm.NewStyle(pterm.FgLightCyan, pterm.Bold, pterm.Underscore)
-		pterm.Info.Printfln("%s%s", updateStyle.Sprint("Installer update available download from: "), updateURLStyle.Sprint(updateUrl))
-		pterm.Println()
+	if versionInfo.UpdateAvailable {
+		pterm.Info.Printfln("Update available:\nCurrent version: %s\nLatest version: %s", versionInfo.CurrentVersion, versionInfo.LatestVersion)
+		doUpdate(versionInfo)
 	}
+	os.Exit(1)
+
 	if verbose {
 		pterm.EnableDebugMessages()
 		pterm.Debug.Println("Verbose output enabled")
