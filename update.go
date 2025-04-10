@@ -108,8 +108,8 @@ func doUpdate(versionInfo VersionInfo) error {
 	if err != nil {
 		return fmt.Errorf("error reading hash response: %s", err.Error())
 	}
-	updateHash := string(hashBytes)
-	pterm.Debug.Println("Update Hash: ", string(updateHash))
+	updateHash := strings.TrimSpace(string(hashBytes))
+	pterm.Debug.Println("Update Hash: ", updateHash)
 
 	resp, err := http.Get(downloadUrl)
 	if err != nil {
@@ -136,7 +136,7 @@ func doUpdate(versionInfo VersionInfo) error {
 		return fmt.Errorf("error applying update: %s", err.Error())
 	}
 
-	pterm.Success.Println("Update successful!\nPlease restart the program to use the new version.")
+	pterm.Success.Println("Update successful!\nPlease restart the installer to use the new version.")
 	os.Exit(0)
 	return nil
 }
