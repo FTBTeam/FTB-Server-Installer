@@ -608,9 +608,9 @@ func doDownload(files ...structs.File) error {
 				grabClient := grab.NewClient()
 				grabClient.UserAgent = util.UserAgent
 				grabClient.HTTPClient = &http.Client{
-					Timeout: time.Duration(dlTimeout) * time.Second,
 					Transport: &http.Transport{
-						Proxy: http.ProxyFromEnvironment,
+						ResponseHeaderTimeout: time.Duration(dlTimeout) * time.Second,
+						Proxy:                 http.ProxyFromEnvironment,
 					},
 				}
 				resp := grabClient.Do(req)
