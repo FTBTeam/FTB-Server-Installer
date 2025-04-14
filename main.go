@@ -5,7 +5,6 @@ import (
 	"context"
 	"crypto/sha1"
 	"crypto/sha256"
-	"crypto/tls"
 	"encoding/hex"
 	"errors"
 	"flag"
@@ -611,8 +610,7 @@ func doDownload(files ...structs.File) error {
 				grabClient.HTTPClient = &http.Client{
 					Timeout: time.Duration(dlTimeout) * time.Second,
 					Transport: &http.Transport{
-						Proxy:        http.ProxyFromEnvironment,
-						TLSNextProto: make(map[string]func(string, *tls.Conn) http.RoundTripper),
+						Proxy: http.ProxyFromEnvironment,
 					},
 				}
 				resp := grabClient.Do(req)
