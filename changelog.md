@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.22
+
+- Changed timeout to only wait for the response headers
+  - Download can take as long as it needs
+
 ## 1.0.12
 - Show install path on missing folder question
 - Add useragent to file downloads
