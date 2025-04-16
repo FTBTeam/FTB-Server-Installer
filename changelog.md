@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.23
+
+- Added debug print to show full error message on download failure
+
 ## 1.0.22
 
 - Changed timeout to only wait for the response headers
