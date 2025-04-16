@@ -632,7 +632,8 @@ func doDownload(files ...structs.File) error {
 						respStatus = strconv.Itoa(resp.HTTPResponse.StatusCode)
 					}
 					pterm.Warning.Printfln("Failed to download:\nFile: %s (%s)\nResp Status: %s\nError: %s", file.Name, reqUrl, respStatus, resp.Err().Error())
-					if attempts == len(urls) {
+					pterm.Debug.Println(err)
+					if attempts >= len(urls) {
 						pterm.Error.Printfln("Failed to download file: %s\nAll mirrors failed", file.Name)
 						os.Exit(1)
 					}
