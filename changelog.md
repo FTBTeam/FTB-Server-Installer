@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.24
+
+- Rewrite download handler
+  - It will now retry a download 3 times before moving on to the next available mirror or erroring out
+- Added modpack id and version id next to the info message
+
 ## 1.0.23
 
 - Added debug print to show full error message on download failure

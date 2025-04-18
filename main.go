@@ -361,7 +361,7 @@ func main() {
 	pterm.Debug.Printfln("Files to download: %d", len(filesToDownload))
 
 	// Show a quick overview of the pack they are installing then ask if they want to continue with downloading the pack
-	pterm.Info.Printfln("Fetched modpack:\nName: %s\nVersion: %s\nModLoader: %s (%s)\nIs Update: %t%s\nInstall Path: %s", modpack.Name, modpackVersion.Name, modpackVersion.Targets.ModLoader.Name, modpackVersion.Targets.ModLoader.Version, isUpdate, updateMsg, installDir)
+	pterm.Info.Printfln("Fetched modpack:\nName: %s(%d)\nVersion: %s(%d)\nModLoader: %s (%s)\nIs Update: %t%s\nInstall Path: %s", modpack.Name, modpack.Id, modpackVersion.Name, modpackVersion.Id, modpackVersion.Targets.ModLoader.Name, modpackVersion.Targets.ModLoader.Version, isUpdate, updateMsg, installDir)
 	if !auto {
 		cont := util.ConfirmYN("Do you want to continue?", true, pterm.Info.MessageStyle)
 		if !cont {
@@ -430,13 +430,13 @@ func main() {
 
 	// download the modpack files
 	pterm.Info.Printfln("Starting mod pack download...")
-	err = doDownload(filesToDownload...)
+	err = downloadFiles(filesToDownload...)
 	if err != nil {
 		selectedProvider.FailedInstall()
 		pterm.Fatal.Println(err.Error())
 	}
 
-	pterm.Info.Printfln("Modpack files downloaded")
+	pterm.Success.Printfln("Modpack files downloaded")
 
 	// If we downloaded java, extract the files to a jre folder
 	if !noJava && !jreAlreadyExists {
@@ -553,99 +553,122 @@ func getModLoader(targets structs.ModpackTargets, memory structs.Memory) (modloa
 	}
 }
 
-func doDownload(files ...structs.File) error {
-	// failedDownloads = []structs.File{}
-	p, _ := pterm.DefaultProgressbar.WithTitle("Downloading...").WithTotal(len(files)).Start()
+func downloadFiles(files ...structs.File) error {
 	var wg sync.WaitGroup
-
-	threadLimit := make(chan int, threads)
+	// Use atomic to keep track of the progress bar
 	var pCount atomic.Uint64
+	threadLimit := make(chan int, threads)
+
+	p, _ := pterm.DefaultProgressbar.WithTitle("Downloading...").WithTotal(len(files)).Start()
+
 	for _, file := range files {
 		wg.Add(1)
 		threadLimit <- 1
 		go func() {
-			defer func() { wg.Done(); <-threadLimit; pCount.Add(1); p.Current = int(pCount.Load()) }()
-			destPath := filepath.Join(installDir, file.Path, file.Name)
-			urls := append([]string{file.Url}, file.Mirrors...)
-			var attempts = 0
-			for _, u := range urls {
-				attempts++
-				pterm.Debug.Printfln("Downloading file: %s from %s | attempt: %d | Urls %d", file.Name, u, attempts, len(urls))
-				reqUrl := u
-
-				req, err := grab.NewRequest(destPath, reqUrl)
-				if err != nil {
-					pterm.Error.Printfln("Download request error: %s", err.Error())
-					if attempts == len(urls) {
-						pterm.Error.Printfln("Failed to download file: %s\nAll mirrors failed", file.Name)
-						os.Exit(1)
-					}
-					continue
-				}
-				req.NoResume = true
-
-				if file.Hash != "" {
-					hexHash, _ := hex.DecodeString(file.Hash)
-					switch file.HashType {
-					case "sha1":
-						req.SetChecksum(sha1.New(), hexHash, false)
-					case "sha256":
-						req.SetChecksum(sha256.New(), hexHash, false)
-					default:
-						pterm.Warning.Printfln("Unsupported hash type: %s", file.HashType)
-					}
-				}
-
-				if req == nil {
-					pterm.Error.Printfln("Download request %s is nil", file.Name)
-					if attempts == len(urls) {
-						pterm.Error.Printfln("Failed to download file: %s\nAll mirrors failed", file.Name)
-						os.Exit(1)
-					}
-					continue
-				}
-
-				grabClient := grab.NewClient()
-				grabClient.UserAgent = util.UserAgent
-				grabClient.HTTPClient = &http.Client{
-					Transport: &http.Transport{
-						ResponseHeaderTimeout: time.Duration(dlTimeout) * time.Second,
-						Proxy:                 http.ProxyFromEnvironment,
-					},
-				}
-				resp := grabClient.Do(req)
-				if resp == nil {
-					pterm.Error.Printfln("Download response %s is nil", file.Name)
-					if attempts == len(urls) {
-						pterm.Error.Printfln("Failed to download file: %s\nAll mirrors failed", file.Name)
-						os.Exit(1)
-					}
-					continue
-				}
-				if resp.Err() == nil {
-					pterm.Debug.Printfln("Downloaded file: %s", file.Name)
-					break
-				} else if resp.Err() != nil {
-					_ = os.Remove(filepath.Join(installDir, file.Path, file.Name))
-					respStatus := "Nil"
-					if resp.HTTPResponse != nil {
-						respStatus = strconv.Itoa(resp.HTTPResponse.StatusCode)
-					}
-					pterm.Warning.Printfln("Failed to download:\nFile: %s (%s)\nResp Status: %s\nError: %s", file.Name, reqUrl, respStatus, resp.Err().Error())
-					pterm.Debug.Println(err)
-					if attempts >= len(urls) {
-						pterm.Error.Printfln("Failed to download file: %s\nAll mirrors failed", file.Name)
-						os.Exit(1)
-					}
-					continue
-				}
+			defer func() { <-threadLimit; pCount.Add(1); p.Current = int(pCount.Load()); wg.Done() }()
+			err := doDownload(file)
+			if err != nil {
+				pterm.Error.Printfln("Failed to download file: %s\nAll mirrors failed\n%s", file.Name, err.Error())
+				pterm.Debug.Println(err)
+				os.Exit(1)
 			}
 		}()
 	}
+	// Wait for all downloads to finish
 	wg.Wait()
-	p.UpdateTitle("Download complete")
-	p.Current = int(pCount.Load()) // Hack to fix race condition in progress bar printer
-	p.Stop()
+
+	// Update the progress bar to show that the downloads are complete
+	p.Current = int(pCount.Load())
+	_, err := p.UpdateTitle("Download complete").Stop()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func doDownload(file structs.File) error {
+	destPath := filepath.Join(installDir, file.Path, file.Name)
+	mirrors := append([]string{file.Url}, file.Mirrors...)
+
+	for m, mirror := range mirrors {
+		for attempts := 0; attempts < 3; attempts++ {
+			pterm.Debug.Printfln("Downloading file: %s from %s | attempt: %d | Mirrors %d", file.Name, mirror, attempts+1, len(mirrors))
+
+			req, err := grab.NewRequest(destPath, mirror)
+			if err != nil {
+				pterm.Error.Printfln("Download request error: %s", err.Error())
+				c, b, err := util.FailedDownloadHandler(attempts, m, file, mirror, mirrors)
+				if err != nil {
+					return err
+				} else if b {
+					break
+				} else if c {
+					continue
+				}
+			}
+			if req == nil {
+				return fmt.Errorf("download request for %s is nil", file.Url)
+			}
+			req.NoResume = true
+
+			if file.Hash != "" {
+				hexHash, _ := hex.DecodeString(file.Hash)
+				switch file.HashType {
+				case "sha1":
+					req.SetChecksum(sha1.New(), hexHash, false)
+				case "sha256":
+					req.SetChecksum(sha256.New(), hexHash, false)
+				default:
+					pterm.Warning.Printfln("Unsupported hash type: %s", file.HashType)
+				}
+			}
+
+			grabClient := grab.NewClient()
+			grabClient.UserAgent = util.UserAgent
+			grabClient.HTTPClient = &http.Client{
+				Transport: &http.Transport{
+					ResponseHeaderTimeout: time.Duration(dlTimeout) * time.Second,
+					Proxy:                 http.ProxyFromEnvironment,
+				},
+			}
+			resp := grabClient.Do(req)
+			if resp == nil {
+				return fmt.Errorf("download response %s is nil", file.Url)
+			}
+			if resp.Err() == nil {
+				pterm.Debug.Printfln("Downloaded file: %s", file.Name)
+				return nil
+			} else if resp.Err() != nil {
+				_ = os.Remove(filepath.Join(installDir, file.Path, file.Name))
+				respStatus := "Nil"
+				if resp.HTTPResponse != nil {
+					respStatus = strconv.Itoa(resp.HTTPResponse.StatusCode)
+				}
+				pterm.Warning.Printfln("Failed to download:\nFile: %s (%s)\nResp Status: %s\nError: %s", file.Name, mirror, respStatus, resp.Err().Error())
+				pterm.Debug.Println(err)
+				c, b, err := util.FailedDownloadHandler(attempts, m, file, mirror, mirrors)
+				if err != nil {
+					return err
+				} else if b {
+					break
+				} else if c {
+					continue
+				}
+			}
+
+			/*if attempts < 2 {
+				sleepTime := util.BackoffTimes[attempts]
+				pterm.Warning.Printfln("Failed to download file %s from %s, retrying in %s", file.Name, mirror, sleepTime.String())
+				time.Sleep(sleepTime)
+			} else if attempts >= 2 && m < len(mirrors)-1 {
+				pterm.Warning.Printfln("Failed to download file %s from %s, trying next mirror", file.Name, mirror)
+				break
+			} else if attempts >= 2 && m == len(mirrors)-1 {
+				return fmt.Errorf("failed to download file %s from %s, all attempts and mirrors failed", file.Name, mirror)
+			}*/
+		}
+	}
 	return nil
 }
 
@@ -678,7 +701,7 @@ func runValidation(manifest structs.Manifest) error {
 			}
 		}
 
-		err := doDownload(invalidFiles...)
+		err := downloadFiles(invalidFiles...)
 		if err != nil {
 			return err
 		}

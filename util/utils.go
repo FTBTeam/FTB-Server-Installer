@@ -21,6 +21,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"time"
 	"unicode"
 )
 
@@ -35,6 +36,11 @@ var (
 	ApiKey         string
 	UserAgent      string
 	LogMw          io.Writer
+	BackoffTimes   = []time.Duration{
+		1 * time.Second,
+		3 * time.Second,
+		10 * time.Second,
+	}
 )
 
 func ParseInstallerName(filename string) (int, int, error) {
@@ -508,7 +514,17 @@ func (cw *CustomWriter) Write(p []byte) (n int, err error) {
 	return cw.writer.Write(filtered)
 }
 
-type LatestJson struct {
-	Version string `json:"version"`
-	Commit  string `json:"commit"`
+func FailedDownloadHandler(attempts, m int, file structs.File, mirror string, mirrors []string) (bool, bool, error) {
+	if attempts < 2 {
+		sleepTime := BackoffTimes[attempts]
+		pterm.Warning.Printfln("Failed to download file %s from %s, retrying in %s", file.Name, mirror, sleepTime.String())
+		time.Sleep(sleepTime)
+		return true, false, nil
+	} else if attempts >= 2 && m < len(mirrors)-1 {
+		pterm.Warning.Printfln("Failed to download file %s from %s, trying next mirror", file.Name, mirror)
+		return false, true, nil
+	} else if attempts >= 2 && m == len(mirrors)-1 {
+		return false, false, fmt.Errorf("failed to download file %s from %s, all attempts and mirrors failed", file.Name, mirror)
+	}
+	return false, false, fmt.Errorf("something went wrong, please contact FTB support")
 }

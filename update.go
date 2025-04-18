@@ -82,7 +82,7 @@ func checkForUpdate() (VersionInfo, error) {
 		return versionInfo, fmt.Errorf("error parsing latest version: %s", err.Error())
 	}
 
-	if latestVersion.GreaterThan(currentVersion) {
+	if latestVersion.GreaterThan(currentVersion) && util.ReleaseVersion != "v0.0.0-beta.0" {
 		versionInfo.UpdateAvailable = true
 	}
 
