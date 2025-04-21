@@ -13,7 +13,6 @@ import (
 	"ftb-server-downloader/repos"
 	"ftb-server-downloader/structs"
 	"ftb-server-downloader/util"
-	"github.com/cavaliergopher/grab/v3"
 	"github.com/codeclysm/extract/v4"
 	"github.com/pterm/pterm"
 	"github.com/pterm/pterm/putils"
@@ -594,59 +593,21 @@ func doDownload(file structs.File) error {
 		for attempts := 0; attempts < 3; attempts++ {
 			pterm.Debug.Printfln("Downloading file: %s from %s | attempt: %d | Mirrors %d", file.Name, mirror, attempts+1, len(mirrors))
 
-			req, err := grab.NewRequest(destPath, mirror)
-			if err != nil {
-				pterm.Error.Printfln("Download request error: %s", err.Error())
-				c, b, err := util.FailedDownloadHandler(attempts, m, file, mirror, mirrors)
-				if err != nil {
-					return err
-				} else if b {
-					break
-				} else if c {
-					continue
-				}
-			}
-			if req == nil {
-				return fmt.Errorf("download request for %s is nil", file.Url)
-			}
-			req.NoResume = true
-
+			dl := util.NewDownload(destPath, mirror)
 			if file.Hash != "" {
 				hexHash, _ := hex.DecodeString(file.Hash)
 				switch file.HashType {
 				case "sha1":
-					req.SetChecksum(sha1.New(), hexHash, false)
+					dl.SetChecksum(sha1.New(), hexHash, true)
 				case "sha256":
-					req.SetChecksum(sha256.New(), hexHash, false)
+					dl.SetChecksum(sha256.New(), hexHash, true)
 				default:
 					pterm.Warning.Printfln("Unsupported hash type: %s", file.HashType)
 				}
 			}
-
-			//grabClient := grab.DefaultClient
-			//grabClient.UserAgent = util.UserAgent
-			//grabClient.HTTPClient = &http.Client{
-			//	Transport: &http.Transport{
-			//		ResponseHeaderTimeout: time.Duration(dlTimeout) * time.Second,
-			//		Proxy:                 http.ProxyFromEnvironment,
-			//	},
-			//}
-			//resp := grabClient.Do(req)
-			resp := grab.DefaultClient.Do(req)
-			if resp == nil {
-				return fmt.Errorf("download response %s is nil", file.Url)
-			}
-			if resp.Err() == nil {
-				pterm.Debug.Printfln("Downloaded file: %s", file.Name)
-				return nil
-			} else if resp.Err() != nil {
-				_ = os.Remove(filepath.Join(installDir, file.Path, file.Name))
-				respStatus := "Nil"
-				if resp.HTTPResponse != nil {
-					respStatus = strconv.Itoa(resp.HTTPResponse.StatusCode)
-				}
-				pterm.Warning.Printfln("Failed to download:\nFile: %s (%s)\nResp Status: %s\nError: %s", file.Name, mirror, respStatus, resp.Err().Error())
-				pterm.Debug.Println(err)
+			err := dl.Do()
+			if err != nil {
+				pterm.Error.Printfln("Download request error: %s", err.Error())
 				c, b, err := util.FailedDownloadHandler(attempts, m, file, mirror, mirrors)
 				if err != nil {
 					return err
