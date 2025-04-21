@@ -3,7 +3,6 @@ module ftb-server-downloader
 go 1.24
 
 require (
-	github.com/cavaliergopher/grab/v3 v3.0.1
 	github.com/codeclysm/extract/v4 v4.0.0
 	github.com/hashicorp/go-version v1.7.0
 	github.com/minio/selfupdate v0.6.0
