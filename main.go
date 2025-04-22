@@ -19,7 +19,6 @@ import (
 	"github.com/pterm/pterm/putils"
 	"io"
 	"log"
-	"net/http"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -361,7 +360,7 @@ func main() {
 	pterm.Debug.Printfln("Files to download: %d", len(filesToDownload))
 
 	// Show a quick overview of the pack they are installing then ask if they want to continue with downloading the pack
-	pterm.Info.Printfln("Fetched modpack:\nName: %s(%d)\nVersion: %s(%d)\nModLoader: %s (%s)\nIs Update: %t%s\nInstall Path: %s", modpack.Name, modpack.Id, modpackVersion.Name, modpackVersion.Id, modpackVersion.Targets.ModLoader.Name, modpackVersion.Targets.ModLoader.Version, isUpdate, updateMsg, installDir)
+	pterm.Info.Printfln("Fetched modpack:\nName: %s (%d)\nVersion: %s (%d)\nModLoader: %s (%s)\nIs Update: %t%s\nInstall Path: %s", modpack.Name, modpack.Id, modpackVersion.Name, modpackVersion.Id, modpackVersion.Targets.ModLoader.Name, modpackVersion.Targets.ModLoader.Version, isUpdate, updateMsg, installDir)
 	if !auto {
 		cont := util.ConfirmYN("Do you want to continue?", true, pterm.Info.MessageStyle)
 		if !cont {
@@ -624,15 +623,16 @@ func doDownload(file structs.File) error {
 				}
 			}
 
-			grabClient := grab.NewClient()
-			grabClient.UserAgent = util.UserAgent
-			grabClient.HTTPClient = &http.Client{
-				Transport: &http.Transport{
-					ResponseHeaderTimeout: time.Duration(dlTimeout) * time.Second,
-					Proxy:                 http.ProxyFromEnvironment,
-				},
-			}
-			resp := grabClient.Do(req)
+			//grabClient := grab.DefaultClient
+			//grabClient.UserAgent = util.UserAgent
+			//grabClient.HTTPClient = &http.Client{
+			//	Transport: &http.Transport{
+			//		ResponseHeaderTimeout: time.Duration(dlTimeout) * time.Second,
+			//		Proxy:                 http.ProxyFromEnvironment,
+			//	},
+			//}
+			//resp := grabClient.Do(req)
+			resp := grab.DefaultClient.Do(req)
 			if resp == nil {
 				return fmt.Errorf("download response %s is nil", file.Url)
 			}
