@@ -563,6 +563,7 @@ func downloadFiles(files ...structs.File) error {
 	for _, file := range files {
 		wg.Add(1)
 		threadLimit <- 1
+		time.Sleep(50 * time.Millisecond)
 		go func() {
 			defer func() { <-threadLimit; pCount.Add(1); p.Current = int(pCount.Load()); wg.Done() }()
 			err := doDownload(file)
