@@ -24,14 +24,20 @@ type Download struct {
 	CancelFunc         *context.CancelFunc
 }
 
-func NewDownload(destPath string, reqUrl string) *Download {
+func NewDownload(destPath string, reqUrl string) (*Download, error) {
+	if reqUrl == "" {
+		return nil, fmt.Errorf("required URL is empty")
+	}
 	return &Download{
 		reqURL:             reqUrl,
 		destPath:           destPath,
 		checkContentLength: false,
-	}
+	}, nil
 }
 
+// Do performs the file download with the configured parameters.
+// It handles directory creation, checksum verification, and cleanup on error if configured.
+// Returns an error if the download or verification fails.
 func (dl *Download) Do() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
 	dl.CancelFunc = &cancel
@@ -50,7 +56,7 @@ func (dl *Download) Do() error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("failed to download file: %s", resp.Status)
+		return fmt.Errorf("failed to download file from %s: bad status %s", dl.reqURL, resp.Status)
 	}
 	if dl.checkContentLength && resp.ContentLength < 1 {
 		return fmt.Errorf("invalid content length: %d", resp.ContentLength)
@@ -88,7 +94,7 @@ func (dl *Download) Do() error {
 	return nil
 }
 
-func (dl *Download) write(b io.Reader) error {
+func (dl *Download) write(b io.ReadCloser) error {
 	// Check if the destination directory exists
 	destDir := filepath.Dir(dl.destPath)
 	if _, err := os.Stat(destDir); os.IsNotExist(err) {

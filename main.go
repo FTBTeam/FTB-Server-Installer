@@ -553,24 +553,35 @@ func getModLoader(targets structs.ModpackTargets, memory structs.Memory) (modloa
 
 func downloadFiles(files ...structs.File) error {
 	var wg sync.WaitGroup
+	var mu sync.Mutex
 	// Use atomic to keep track of the progress bar
 	var pCount atomic.Uint64
-	threadLimit := make(chan int, threads)
+	threadLimit := make(chan struct{}, threads)
 
 	p, _ := pterm.DefaultProgressbar.WithTitle("Downloading...").WithTotal(len(files)).Start()
 
 	for _, file := range files {
 		wg.Add(1)
-		threadLimit <- 1
-		go func() {
-			defer func() { <-threadLimit; pCount.Add(1); p.Current = int(pCount.Load()); wg.Done() }()
-			err := doDownload(file)
+		threadLimit <- struct{}{}
+		fileCopy := file
+		go func(f structs.File) {
+			defer func() {
+				<-threadLimit
+				count := pCount.Add(1)
+				if count%5 == 0 || count == uint64(len(files)) {
+					mu.Lock()
+					p.Current = int(count)
+					mu.Unlock()
+				}
+				wg.Done()
+			}()
+			err := doDownload(f)
 			if err != nil {
-				pterm.Error.Printfln("Failed to download file: %s\nAll mirrors failed\n%s", file.Name, err.Error())
+				pterm.Error.Printfln("Failed to download file: %s\nAll mirrors failed\n%s", f.Name, err.Error())
 				pterm.Debug.Println(err)
 				os.Exit(1)
 			}
-		}()
+		}(fileCopy)
 	}
 	// Wait for all downloads to finish
 	wg.Wait()
@@ -593,7 +604,18 @@ func doDownload(file structs.File) error {
 		for attempts := 0; attempts < 3; attempts++ {
 			pterm.Debug.Printfln("Downloading file: %s from %s | attempt: %d | Mirrors %d", file.Name, mirror, attempts+1, len(mirrors))
 
-			dl := util.NewDownload(destPath, mirror)
+			dl, err := util.NewDownload(destPath, mirror)
+			if err != nil {
+				pterm.Error.Printfln("Error creating download: %s", err.Error())
+				c, b, err := util.FailedDownloadHandler(attempts, m, file, mirror, mirrors)
+				if err != nil {
+					return err
+				} else if b {
+					break
+				} else if c {
+					continue
+				}
+			}
 			if file.Hash != "" {
 				hexHash, _ := hex.DecodeString(file.Hash)
 				switch file.HashType {
@@ -605,7 +627,7 @@ func doDownload(file structs.File) error {
 					pterm.Warning.Printfln("Unsupported hash type: %s", file.HashType)
 				}
 			}
-			err := dl.Do()
+			err = dl.Do()
 			if err != nil {
 				pterm.Error.Printfln("Download request error: %s", err.Error())
 				c, b, err := util.FailedDownloadHandler(attempts, m, file, mirror, mirrors)
