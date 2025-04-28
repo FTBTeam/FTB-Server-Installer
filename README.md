@@ -36,7 +36,7 @@ Open up a terminal and navigate to the directory where the installer is located.
 | `-validate`       | `false`              | Validates the modpack files after they have been downloaded and installed                                           |
 | `-provider`       | `ftb`                | Sets the modpack provider (ftb is the only provider at the moment)                                                  |
 | `-force`          |                      | Only works when -auto is used, will force the installer to continue upon warnings                                   |
-| `-threads`        | CPU thread count * 2 | Number of concurrent download threads                                                                               |
+| `-threads`        | 4                    | Number of concurrent download threads                                                                               |
 | `-apikey`         |                      | API key for accessing private modpacks                                                                              |
 | `-skip-modloader` | `false`              | If set, installer will skip running the modloader installer                                                         |
 | `-no-java`        | `false`              | If set, installer wont download a copy of java                                                                      |

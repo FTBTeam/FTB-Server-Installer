@@ -21,7 +21,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -75,7 +74,7 @@ func main() {
 	flag.BoolVar(&auto, "auto", false, "Dont ask questions, just install the server")
 	flag.BoolVar(&latest, "latest", false, "Gets the latest (alpha/beta/release) version of the modpack")
 	flag.BoolVar(&force, "force", false, "Force the modpack install, dont ask questions just continue (only works with -auto)")
-	flag.IntVar(&threads, "threads", runtime.NumCPU()*2, "Number of threads to use (Default: CPU Cores * 2)")
+	flag.IntVar(&threads, "threads", 4, "Number of threads to use (Default: 4)")
 	flag.StringVar(&apiKey, "apikey", "public", "FTB API key (Only for private FTB modpacks)")
 	flag.BoolVar(&validate, "validate", false, "Validate the modpack after install")
 	flag.BoolVar(&skipModloader, "skip-modloader", false, "Skip installing the modloader")
@@ -563,6 +562,7 @@ func downloadFiles(files ...structs.File) error {
 	for _, file := range files {
 		wg.Add(1)
 		threadLimit <- 1
+		time.Sleep(50 * time.Millisecond)
 		go func() {
 			defer func() { <-threadLimit; pCount.Add(1); p.Current = int(pCount.Load()); wg.Done() }()
 			err := doDownload(file)
