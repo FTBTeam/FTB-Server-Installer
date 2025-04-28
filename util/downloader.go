@@ -78,8 +78,6 @@ func (dl *Download) Do() error {
 			return err
 		}
 		sum := dl.hash.Sum(nil)
-		//fmt.Println("Checksum: ", fmt.Sprintf("%x", dl.checksum))
-		//fmt.Println("CalSum: ", fmt.Sprintf("%x", sum))
 		if !bytes.Equal(dl.checksum, sum) {
 			if dl.deleteOnError {
 				if err := os.Remove(dl.destPath); err != nil {
