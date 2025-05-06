@@ -123,7 +123,11 @@ func (s Forge) Install(useOwnJava bool) error {
 			return err
 		}
 		dest := filepath.Join(s.InstallDir, vanillaDl[0].Path, vanillaDl[0].Name)
-		err = util.NewDownload(dest, vanillaDl[0].Url).Do()
+		fDl, err := util.NewDownload(dest, vanillaDl[0].Url)
+		if err != nil {
+			return err
+		}
+		err = fDl.Do()
 		if err != nil {
 			return err
 		}

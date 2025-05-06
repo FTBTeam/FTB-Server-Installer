@@ -3,8 +3,8 @@ package util
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
-	"github.com/pterm/pterm"
 	"hash"
 	"io"
 	"net/http"
@@ -21,7 +21,7 @@ type Download struct {
 	deleteOnError      bool
 	checkContentLength bool
 	Progress           float64
-	CancelFunc         *context.CancelFunc
+	CancelFunc         context.CancelFunc
 }
 
 func NewDownload(destPath string, reqUrl string) (*Download, error) {
@@ -40,7 +40,7 @@ func NewDownload(destPath string, reqUrl string) (*Download, error) {
 // Returns an error if the download or verification fails.
 func (dl *Download) Do() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
-	dl.CancelFunc = &cancel
+	dl.CancelFunc = cancel
 	defer dl.Cancel()
 
 	req, err := http.NewRequestWithContext(ctx, "GET", dl.reqURL, nil)
@@ -68,34 +68,13 @@ func (dl *Download) Do() error {
 		return err
 	}
 
-	if dl.hash != nil && dl.checksum != nil {
-		f, err := os.OpenFile(dl.destPath, os.O_RDONLY, 0644)
-		if err != nil {
-			return err
-		}
-		defer f.Close()
-		if _, err := io.Copy(dl.hash, f); err != nil {
-			return err
-		}
-		sum := dl.hash.Sum(nil)
-		if !bytes.Equal(dl.checksum, sum) {
-			if dl.deleteOnError {
-				if err := os.Remove(dl.destPath); err != nil {
-					return fmt.Errorf("checksum mismatch, failed to remove file: %s", err.Error())
-				}
-				return fmt.Errorf("checksum mismatch, file deleted")
-			}
-			return fmt.Errorf("checksum mismatch")
-		}
-	}
-
 	return nil
 }
 
 func (dl *Download) write(b io.ReadCloser) error {
 	// Check if the destination directory exists
 	destDir := filepath.Dir(dl.destPath)
-	if _, err := os.Stat(destDir); os.IsNotExist(err) {
+	if _, err := os.Stat(destDir); errors.Is(err, os.ErrNotExist) {
 		// Create the destination directory if it doesn't exist
 		if err := os.MkdirAll(destDir, 0755); err != nil {
 			return fmt.Errorf("failed to create directory: %s", err.Error())
@@ -106,16 +85,29 @@ func (dl *Download) write(b io.ReadCloser) error {
 	if err != nil {
 		return err
 	}
-	defer func() {
-		if err := f.Close(); err != nil {
-			pterm.Error.Printfln("Error closing file: %s", err.Error())
-		}
-	}()
-	_, err = io.Copy(f, b)
-	if err != nil {
+	defer f.Close()
+
+	var writer io.Writer = f
+
+	if dl.hash != nil {
+		writer = io.MultiWriter(f, dl.hash)
+	}
+
+	if _, err = io.Copy(writer, b); err != nil {
 		return fmt.Errorf("failed to write file: %s", err.Error())
 	}
-	//fmt.Println(size)
+
+	if dl.hash != nil && dl.checksum != nil {
+		sum := dl.hash.Sum(nil)
+		if !bytes.Equal(dl.checksum, sum) {
+			if dl.deleteOnError {
+				if err := os.Remove(dl.destPath); err != nil {
+					return fmt.Errorf("checksum mismatch, failed to remove file: %s", err.Error())
+				}
+			}
+			return fmt.Errorf("checksum mismatch")
+		}
+	}
 	return nil
 }
 
@@ -130,7 +122,7 @@ func (dl *Download) SetChecksum(hash hash.Hash, sum []byte, deleteOnError bool) 
 }
 
 func (dl *Download) Cancel() {
-	if dl.Cancel != nil {
-		(*dl.CancelFunc)()
+	if dl.CancelFunc != nil {
+		dl.CancelFunc()
 	}
 }
