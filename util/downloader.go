@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/pterm/pterm"
 	"hash"
 	"io"
 	"net/http"
@@ -55,10 +56,15 @@ func (dl *Download) Do() error {
 	}
 	defer resp.Body.Close()
 
+	//if resp.Header.Get("Cf-Cache-Status") != "HIT" && resp.Header.Get("Cf-Cache-Status") != "" {
+	//	pterm.Debug.Printfln("Cf-Cache-Status for %s: %s", dl.reqURL, resp.Header.Get("Cf-Cache-Status"))
+	//}
 	if resp.StatusCode != http.StatusOK {
+		pterm.Debug.Printfln("Headers: %+v", resp.Header)
 		return fmt.Errorf("failed to download file from %s: bad status %s", dl.reqURL, resp.Status)
 	}
 	if dl.checkContentLength && resp.ContentLength < 1 {
+		pterm.Debug.Printfln("Headers: %+v", resp.Header)
 		return fmt.Errorf("invalid content length: %d", resp.ContentLength)
 	}
 
