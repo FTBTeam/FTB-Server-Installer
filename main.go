@@ -640,6 +640,7 @@ func doDownload(file structs.File) error {
 				}
 			}
 
+			return nil
 			/*if attempts < 2 {
 				sleepTime := util.BackoffTimes[attempts]
 				pterm.Warning.Printfln("Failed to download file %s from %s, retrying in %s", file.Name, mirror, sleepTime.String())
