@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"ftb-server-downloader/structs"
 	"ftb-server-downloader/util"
-	"github.com/cavaliergopher/grab/v3"
 	semVer "github.com/hashicorp/go-version"
 	"github.com/pterm/pterm"
 	"os"
@@ -124,7 +123,11 @@ func (s Forge) Install(useOwnJava bool) error {
 			return err
 		}
 		dest := filepath.Join(s.InstallDir, vanillaDl[0].Path, vanillaDl[0].Name)
-		_, err = grab.Get(dest, vanillaDl[0].Url)
+		fDl, err := util.NewDownload(dest, vanillaDl[0].Url)
+		if err != nil {
+			return err
+		}
+		err = fDl.Do()
 		if err != nil {
 			return err
 		}

@@ -514,6 +514,8 @@ func (cw *CustomWriter) Write(p []byte) (n int, err error) {
 	return cw.writer.Write(filtered)
 }
 
+// FailedDownloadHandler handles the download retry logic
+// return format is (attempts, mirror, error)
 func FailedDownloadHandler(attempts, m int, file structs.File, mirror string, mirrors []string) (bool, bool, error) {
 	if attempts < 2 {
 		sleepTime := BackoffTimes[attempts]
