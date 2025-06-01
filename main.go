@@ -20,6 +20,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -73,7 +74,7 @@ func main() {
 	flag.BoolVar(&auto, "auto", false, "Dont ask questions, just install the server")
 	flag.BoolVar(&latest, "latest", false, "Gets the latest (alpha/beta/release) version of the modpack")
 	flag.BoolVar(&force, "force", false, "Force the modpack install, dont ask questions just continue (only works with -auto)")
-	flag.IntVar(&threads, "threads", 4, "Number of threads to use (Default: 4)")
+	flag.IntVar(&threads, "threads", runtime.NumCPU()*2, "Number of threads to use (Default: number of CPU cores)")
 	flag.StringVar(&apiKey, "apikey", "public", "FTB API key (Only for private FTB modpacks)")
 	flag.BoolVar(&validate, "validate", false, "Validate the modpack after install")
 	flag.BoolVar(&skipModloader, "skip-modloader", false, "Skip installing the modloader")
