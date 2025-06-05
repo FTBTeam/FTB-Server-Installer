@@ -116,15 +116,69 @@ jobs:
           name: release-${{ matrix.goos }}-${{ matrix.goarch }}
           path: |
             out/*
+
+  generate-matrix:
+    name: Generate Matrix
+    needs:
+      - build-linux
+    runs-on: ubuntu-latest
+    outputs:
+      packids: ${{ steps.get-packids.outputs.packids }}
+    steps:
+      - name: Fetch and select 5 random modpack IDs
+        id: get-packids
+        shell: bash
+        run: |
+          MODPACKS=$(curl -s https://api.feed-the-beast.com/v1/modpacks/modpack/all-info | jq -r '.packs[].id')
+          
+          # Exclude these pack IDs (space seperated)
+          EXCLUDE_IDS="27"
+          
+          # Filter out excluded packs
+          FILTERED=$(echo "$MODPACKS" | grep -v -E "^($(echo $EXCLUDE_IDS | sed 's/ /|/g'))$")
+          
+          # Randomly shuffle and take 5 using Bash+awk+sort
+          RANDOM_IDS=$(echo "$FILTERED" | awk 'BEGIN {srand()} {print rand() "\t" $0}' | sort -k1,1 | cut -f2 | head -n 5)
+          
+          # Convert to matrix JSON
+          MATRIX=$(echo "$RANDOM_IDS" | jq -Rnc '[inputs | {pack_id: .}]')
+          
+          # Set output
+          echo "$MATRIX"
+          echo "packids=$MATRIX" >> "$GITHUB_OUTPUT"
+
+  test-installer:
+    name: Test installer
+    runs-on: ubuntu-latest
+    needs: generate-matrix
+    strategy:
+      matrix:
+        packs: ${{ fromJson(needs.generate-matrix.outputs.packids) }}
+    steps:
+      - name: Download linux amd64 artifact
+        uses: actions/download-artifact@v4
+        with:
+         name: release-linux-amd64
+         path: release/
+
+      - name: Run Test
+        shell: bash
+        run: |
+          cd release/
+          echo "Running job for modpack ID: ${{ matrix.packs.pack_id }}"
+          chmod +x ./ftb-server-linux-amd64
+          ./ftb-server-linux-amd64 -pack ${{ matrix.packs.pack_id }} -latest -auto -force -skip-modloader -verbose
+
   release:
     needs:
       - build-windows
       - build-macos
       - build-linux
+      - test-installer
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        
+
       # Windows
       - name: Download windows amd64 artifact
         uses: actions/download-artifact@v4
