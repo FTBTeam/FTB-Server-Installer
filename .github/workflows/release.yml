@@ -246,15 +246,6 @@ jobs:
           b2 sync --replace-newer --no-progress release b2://${{ secrets.PUBLISH_BUCKET }}/bin/server-installer/latest/
           b2 sync --replace-newer --no-progress release b2://${{ secrets.PUBLISH_BUCKET }}/bin/server-installer/$GITHUB_REF_NAME/
 
-      - name: Create post-body.json
-        if: "!contains(github.ref_name, 'beta')"
-        shell: bash
-        run: |
-          echo "$PWD"
-          bash gen-version.sh
-          cat post-body.json
-          curl --fail -X POST "https://api.feed-the-beast.com/v1/meta/versions/server-installer" -H "Content-Type: application/json" -u "admin:${{ secrets.META_API_TOKEN}}" -d @./post-body.json
-
       # Release to GitHub
       - name: Github Release
         if: "!contains(github.ref_name, 'beta')"
