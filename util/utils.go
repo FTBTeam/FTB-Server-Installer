@@ -127,7 +127,7 @@ func IsEmptyDir(path string) (bool, error) {
 		hasNonInstallerFiles := false
 		installerName := filepath.Base(os.Args[0])
 		for _, f := range dir {
-			if !f.IsDir() && (f.Name() == installerName || f.Name() == "ftb-server-installer.log") {
+			if !f.IsDir() && (f.Name() == installerName || f.Name() == "ftb-server-installer.log" || f.Name() == "install.bat" || f.Name() == "install.sh" || f.Name() == "README.md") {
 				continue
 			}
 			hasNonInstallerFiles = true
