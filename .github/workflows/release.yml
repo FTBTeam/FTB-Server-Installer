@@ -158,8 +158,8 @@ jobs:
       - name: Download linux amd64 artifact
         uses: actions/download-artifact@v4
         with:
-         name: release-linux-amd64
-         path: release/
+          name: release-linux-amd64
+          path: release/
 
       - name: Run Test
         shell: bash
