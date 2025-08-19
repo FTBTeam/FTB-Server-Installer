@@ -13,9 +13,6 @@ import (
 	"ftb-server-downloader/repos"
 	"ftb-server-downloader/structs"
 	"ftb-server-downloader/util"
-	"github.com/codeclysm/extract/v4"
-	"github.com/pterm/pterm"
-	"github.com/pterm/pterm/putils"
 	"io"
 	"log"
 	"os"
@@ -26,6 +23,10 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/codeclysm/extract/v4"
+	"github.com/pterm/pterm"
+	"github.com/pterm/pterm/putils"
 )
 
 var (
@@ -43,6 +44,7 @@ var (
 	noJava        bool
 	noColours     bool
 	dlTimeout     int
+	acceptEula    bool
 	verbose       bool
 
 	logFile *os.File
@@ -82,6 +84,7 @@ func main() {
 	justFiles := flag.Bool("just-files", false, "Only download the files, do not install java or the modloader")
 	flag.BoolVar(&noColours, "no-colours", false, "Do not display console/terminal colours")
 	flag.IntVar(&dlTimeout, "timeout", 120, "File download timeout in seconds")
+	flag.BoolVar(&acceptEula, "accept-eula", false, "Accept the EULA for Minecraft. By using this flag you are indicating your agreement to Minecraft's EULA (https://account.mojang.com/documents/minecraft_eula)")
 	flag.BoolVar(&verbose, "verbose", false, "Verbose output")
 	flag.Parse()
 
@@ -521,6 +524,14 @@ func main() {
 	}*/
 
 	selectedProvider.SuccessfulInstall()
+	if acceptEula {
+		// set eula=true in the eula.txt file
+		eulaFile := filepath.Join(installDir, "eula.txt")
+		err = os.WriteFile(eulaFile, []byte("#By changing the setting below to TRUE you are indicating your agreement to our EULA (https://account.mojang.com/documents/minecraft_eula).\neula=true\n"), 0644)
+		if err != nil {
+			pterm.Error.Println("Error writing eula.txt file:", err.Error())
+		}
+	}
 	pterm.Success.Println("Modpack installed successfully")
 }
 
