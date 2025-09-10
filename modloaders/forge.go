@@ -5,14 +5,15 @@ import (
 	"fmt"
 	"ftb-server-downloader/structs"
 	"ftb-server-downloader/util"
-	semVer "github.com/hashicorp/go-version"
-	"github.com/pterm/pterm"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
 	"runtime"
 	"strings"
+
+	semVer "github.com/hashicorp/go-version"
+	"github.com/pterm/pterm"
 )
 
 const (
@@ -92,12 +93,12 @@ func (s Forge) Install(useOwnJava bool) error {
 
 		pterm.Info.Println("Running Forge installer")
 		if err = cmd.Start(); err != nil {
-			return fmt.Errorf("error running neoforge installer: %s", err.Error())
+			return fmt.Errorf("error running forge installer: %s", err.Error())
 		}
 		if err = cmd.Wait(); err != nil {
 			if err, ok := err.(*exec.ExitError); ok {
 				if err.ExitCode() != 0 {
-					return fmt.Errorf("neoforge installer failed with exit code %d, error: %s", err.ExitCode(), err.Error())
+					return fmt.Errorf("forge installer failed with exit code %d, error: %s", err.ExitCode(), err.Error())
 				}
 			} else {
 				return fmt.Errorf("error waiting for command: %s", err.Error())
