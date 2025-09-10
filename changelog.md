@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.0.28
+
+- Fixed typo in Minecraft Forge install error message
+- Updated golang to 1.25
+- Updated packages
+
+## 1.0.27
+
+- Added new flag `-accept-eula`
+  - Automatically accepts the Minecraft EULA
+
 ## 1.0.24
 
 - Rewrite download handler
