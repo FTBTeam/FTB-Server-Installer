@@ -217,14 +217,16 @@ func (s Forge) startScript(ownJava bool) error {
 			line := scanner.Text()
 
 			match, _ := regexp.MatchString("^(java).+$", line)
-			if match && ownJava {
-				pterm.Debug.Println("Replacing java path in run script")
-				javaPath, err := util.GetJavaPath(s.Targets.JavaVersion)
-				if err != nil {
-					return err
+			if match {
+				if ownJava {
+					pterm.Debug.Println("Replacing java path in run script")
+					javaPath, err := util.GetJavaPath(s.Targets.JavaVersion)
+					if err != nil {
+						return err
+					}
+					line = regexp.MustCompile("^java").
+						ReplaceAllString(line, fmt.Sprintf("\"%s\"", javaPath))
 				}
-				line = regexp.MustCompile("^java").
-					ReplaceAllString(line, fmt.Sprintf("\"%s\"", javaPath))
 
 				if runtime.GOOS == "windows" {
 					line = regexp.MustCompile(`%\*`).

@@ -5,14 +5,15 @@ import (
 	"fmt"
 	"ftb-server-downloader/structs"
 	"ftb-server-downloader/util"
-	semVer "github.com/hashicorp/go-version"
-	"github.com/pterm/pterm"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
 	"runtime"
 	"strings"
+
+	semVer "github.com/hashicorp/go-version"
+	"github.com/pterm/pterm"
 )
 
 type NeoForge struct {
@@ -167,14 +168,16 @@ func (s NeoForge) startScript(ownJava bool) error {
 			line := scanner.Text()
 
 			match, _ := regexp.MatchString("^(java).+$", line)
-			if match && ownJava {
-				pterm.Debug.Println("Replacing java path in run script")
-				javaPath, err := util.GetJavaPath(s.Targets.JavaVersion)
-				if err != nil {
-					return err
+			if match {
+				if ownJava {
+					pterm.Debug.Println("Replacing java path in run script")
+					javaPath, err := util.GetJavaPath(s.Targets.JavaVersion)
+					if err != nil {
+						return err
+					}
+					line = regexp.MustCompile("^java").
+						ReplaceAllString(line, fmt.Sprintf("\"%s\"", javaPath))
 				}
-				line = regexp.MustCompile("^java").
-					ReplaceAllString(line, fmt.Sprintf("\"%s\"", javaPath))
 
 				if runtime.GOOS == "windows" {
 					line = regexp.MustCompile(`%\*`).
