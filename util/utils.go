@@ -8,8 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"ftb-server-downloader/structs"
-	semVer "github.com/hashicorp/go-version"
-	"github.com/pterm/pterm"
 	"io"
 	"io/fs"
 	"net/http"
@@ -23,6 +21,9 @@ import (
 	"strings"
 	"time"
 	"unicode"
+
+	semVer "github.com/hashicorp/go-version"
+	"github.com/pterm/pterm"
 )
 
 const (
@@ -69,8 +70,9 @@ func makeRequest(method, url string, requestHeaders map[string][]string) (*http.
 	for k, v := range requestHeaders {
 		headers[k] = v
 	}
+	headers["User-Agent"] = []string{UserAgent}
 	if ApiKey != "public" && strings.Contains(url, "api.feed-the-beast.com") {
-		headers["x-api-key"] = []string{ApiKey}
+		headers["Authorization"] = []string{fmt.Sprintf("Bearer %s", ApiKey)}
 	}
 	client := &http.Client{}
 	req, err := http.NewRequest(method, url, nil)
@@ -83,9 +85,7 @@ func makeRequest(method, url string, requestHeaders map[string][]string) (*http.
 }
 
 func DoGet(url string) (*http.Response, error) {
-	headers := map[string][]string{
-		"User-Agent": {UserAgent},
-	}
+	headers := map[string][]string{}
 	resp, err := makeRequest("GET", url, headers)
 	if err != nil {
 		return nil, err
@@ -98,9 +98,7 @@ func DoGet(url string) (*http.Response, error) {
 }
 
 func DoHead(url string) (*http.Response, error) {
-	headers := map[string][]string{
-		"User-Agent": {UserAgent},
-	}
+	headers := map[string][]string{}
 	resp, err := makeRequest("HEAD", url, headers)
 	if err != nil {
 		return nil, err
