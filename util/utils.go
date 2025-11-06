@@ -528,3 +528,27 @@ func FailedDownloadHandler(attempts, m int, file structs.File, mirror string, mi
 	}
 	return false, false, fmt.Errorf("something went wrong, please contact FTB support")
 }
+
+func RelaunchInTerminal() {
+	executable, err := os.Executable()
+
+	if err != nil {
+		fmt.Printf("Failed to get executable path: %s\n", err.Error())
+		return
+	}
+
+	terminals := [][]string{
+		{"gnome-terminal", "--", "bash", "-c", executable + "; read -p 'Press Enter to close...'"},
+		{"konsole", "--hold", "-e", executable},
+		{"xfce4-terminal", "--hold", "-e", executable},
+		{"mate-terminal", "-e", executable},
+		{"xterm", "-hold", "-e", executable},
+	}
+
+	for _, termCmd := range terminals {
+		cmd := exec.Command(termCmd[0], termCmd[1:]...)
+		if err := cmd.Start(); err == nil {
+			return
+		}
+	}
+}
