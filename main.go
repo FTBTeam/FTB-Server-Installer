@@ -27,6 +27,7 @@ import (
 	"github.com/codeclysm/extract/v4"
 	"github.com/pterm/pterm"
 	"github.com/pterm/pterm/putils"
+	"golang.org/x/term"
 )
 
 var (
@@ -51,6 +52,10 @@ var (
 )
 
 func init() {
+	if runtime.GOOS == "linux" && !term.IsTerminal(int(os.Stdin.Fd())) {
+		util.RelaunchInTerminal()
+		return
+	}
 
 	if util.ReleaseVersion == "" || util.ReleaseVersion == "main" {
 		util.ReleaseVersion = "v0.0.0-beta.0"
