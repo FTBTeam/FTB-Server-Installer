@@ -93,6 +93,12 @@ func main() {
 	flag.BoolVar(&verbose, "verbose", false, "Verbose output")
 	flag.Parse()
 
+	// Threads cannot be less than 1
+	if threads < 1 {
+		// Default to number of CPU cores * 2
+		threads = runtime.NumCPU() * 2
+	}
+
 	if *justFiles {
 		noJava = true
 		skipModloader = true
@@ -682,7 +688,6 @@ func runValidation(manifest structs.Manifest) error {
 				continue
 			}
 			if fileHash != f.Hash {
-
 				pterm.Warning.Printfln("Unexpected file hash from %s\nExpected: %s\nGot: %s", f.Name, f.Hash, fileHash)
 				invalidFiles = append(invalidFiles, f)
 			}
