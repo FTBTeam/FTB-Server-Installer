@@ -241,17 +241,15 @@ func (s Forge) startScript(ownJava bool) error {
 
 		file.Close()
 
-		if ownJava {
-			// Rewrite the file with our own java path
-			file, _ = os.Create(runScriptPath)
-			defer file.Close()
+		// Rewrite the file with our changes
+		file, _ = os.Create(runScriptPath)
+		defer file.Close()
 
-			writer := bufio.NewWriter(file)
-			for _, line := range lines {
-				_, _ = writer.WriteString(line + "\n")
-			}
-			_ = writer.Flush()
+		writer := bufio.NewWriter(file)
+		for _, line := range lines {
+			_, _ = writer.WriteString(line + "\n")
 		}
+		_ = writer.Flush()
 	} else {
 		runFile, err := os.OpenFile(strings.ReplaceAll(runScriptPath, "run", "start"), os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
 		if err != nil {
