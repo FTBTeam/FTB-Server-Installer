@@ -91,6 +91,7 @@ func DoGet(url string) (*http.Response, error) {
 		return nil, err
 	}
 	if resp.StatusCode != 200 {
+		defer resp.Body.Close()
 		b, _ := io.ReadAll(resp.Body)
 		return nil, errors.New(fmt.Sprintf("Error: %d\n%s", resp.StatusCode, b))
 	}
@@ -104,6 +105,7 @@ func DoHead(url string) (*http.Response, error) {
 		return nil, err
 	}
 	if resp.StatusCode != 200 {
+		defer resp.Body.Close()
 		b, _ := io.ReadAll(resp.Body)
 		return nil, errors.New(fmt.Sprintf("Error: %d\n%s", resp.StatusCode, b))
 	}
@@ -401,23 +403,26 @@ func CombineZip(inZip string, destZip string) error {
 			if err != nil {
 				return err
 			}
-			defer zipFileReader.Close()
 
 			header, err := zip.FileInfoHeader(file.FileInfo())
 			if err != nil {
+				zipFileReader.Close()
 				return err
 			}
 			header.Name = file.Name
 
 			zipWriter, err := writer.CreateHeader(header)
 			if err != nil {
+				zipFileReader.Close()
 				return err
 			}
 
 			_, err = io.Copy(zipWriter, zipFileReader)
 			if err != nil {
+				zipFileReader.Close()
 				return err
 			}
+			zipFileReader.Close()
 		}
 		zipReader.Close()
 	}

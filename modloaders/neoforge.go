@@ -192,17 +192,15 @@ func (s NeoForge) startScript(ownJava bool) error {
 
 		file.Close()
 
-		if ownJava {
-			// Rewrite the file with our own java path
-			file, _ = os.Create(runScriptPath)
-			defer file.Close()
+		// Rewrite the file with our changes
+		file, _ = os.Create(runScriptPath)
+		defer file.Close()
 
-			writer := bufio.NewWriter(file)
-			for _, line := range lines {
-				_, _ = writer.WriteString(line + "\n")
-			}
-			_ = writer.Flush()
+		writer := bufio.NewWriter(file)
+		for _, line := range lines {
+			_, _ = writer.WriteString(line + "\n")
 		}
+		_ = writer.Flush()
 	}
 
 	return nil
