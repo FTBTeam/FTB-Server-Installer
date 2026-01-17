@@ -74,7 +74,7 @@ func (v Vanilla) GetDownload() ([]structs.File, error) {
 	return mlFiles, nil
 }
 
-func (v Vanilla) Install(useOwnJava bool) error {
+func (v Vanilla) Install(bool) error {
 	return nil
 }
 

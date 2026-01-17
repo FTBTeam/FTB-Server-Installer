@@ -113,7 +113,7 @@ func (s Forge) Install(useOwnJava bool) error {
 			return err
 		}
 		if pathExists {
-			os.Remove(filepath.Join(s.InstallDir, fmt.Sprintf("minecraft_server.%s.jar", s.Targets.McVersion)))
+			_ = os.Remove(filepath.Join(s.InstallDir, fmt.Sprintf("minecraft_server.%s.jar", s.Targets.McVersion)))
 		}
 		vanilla, err := GetVanilla(s.Targets, s.InstallDir)
 		if err != nil {
@@ -137,7 +137,7 @@ func (s Forge) Install(useOwnJava bool) error {
 		if err != nil {
 			return err
 		}
-		os.Remove(filepath.Join(s.InstallDir, jarName))
+		_ = os.Remove(filepath.Join(s.InstallDir, jarName))
 	}
 
 	err = s.startScript(useOwnJava)
@@ -149,10 +149,11 @@ func (s Forge) Install(useOwnJava bool) error {
 }
 
 func doesForgeExist(url string) bool {
-	_, err := util.DoHead(url)
+	resp, err := util.DoHead(url)
 	if err != nil {
 		return false
 	}
+	defer resp.Body.Close()
 	return true
 }
 
@@ -239,7 +240,7 @@ func (s Forge) startScript(ownJava bool) error {
 			lines = append(lines, line)
 		}
 
-		file.Close()
+		_ = file.Close()
 
 		// Rewrite the file with our changes
 		file, _ = os.Create(runScriptPath)
