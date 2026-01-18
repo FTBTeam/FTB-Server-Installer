@@ -123,19 +123,20 @@ func IsEmptyDir(path string) (bool, error) {
 	// We want to check if the dir is empty or only contains the installer file
 	if count == 0 {
 		return true, nil
-	} else {
-		hasNonInstallerFiles := false
-		installerName := filepath.Base(os.Args[0])
-		for _, f := range dir {
-			if !f.IsDir() && (f.Name() == installerName || f.Name() == "ftb-server-installer.log" || f.Name() == "install.bat" || f.Name() == "install.sh" || f.Name() == "README.md") {
-				continue
-			}
-			hasNonInstallerFiles = true
-		}
-		return !hasNonInstallerFiles, nil
 	}
+
+	hasNonInstallerFiles := false
+	installerName := filepath.Base(os.Args[0])
+	for _, f := range dir {
+		if !f.IsDir() && (f.Name() == installerName || f.Name() == "ftb-server-installer.log" || f.Name() == "install.bat" || f.Name() == "install.sh" || f.Name() == "README.md") {
+			continue
+		}
+		hasNonInstallerFiles = true
+	}
+	return !hasNonInstallerFiles, nil
 }
 
+//goland:noinspection GoUnusedExportedFunction
 func IsEmptyDirRecursive(path string) (bool, error) {
 	dir, err := os.ReadDir(path)
 	if err != nil {
@@ -186,6 +187,7 @@ func WriteManifest(installDir string, manifest structs.Manifest) error {
 	if err != nil {
 		return fmt.Errorf("unable to create manifest: %s", err.Error())
 	}
+	defer vFile.Close()
 	_, err = vFile.Write(manifestJson)
 	if err != nil {
 		return fmt.Errorf("unable to write manifest: %s", err.Error())
@@ -401,30 +403,34 @@ func CombineZip(inZip string, destZip string) error {
 		for _, file := range zipReader.File {
 			zipFileReader, err := file.Open()
 			if err != nil {
+				_ = zipReader.Close()
 				return err
 			}
 
 			header, err := zip.FileInfoHeader(file.FileInfo())
 			if err != nil {
-				zipFileReader.Close()
+				_ = zipFileReader.Close()
+				_ = zipReader.Close()
 				return err
 			}
 			header.Name = file.Name
 
 			zipWriter, err := writer.CreateHeader(header)
 			if err != nil {
-				zipFileReader.Close()
+				_ = zipFileReader.Close()
+				_ = zipReader.Close()
 				return err
 			}
 
 			_, err = io.Copy(zipWriter, zipFileReader)
 			if err != nil {
-				zipFileReader.Close()
+				_ = zipFileReader.Close()
+				_ = zipReader.Close()
 				return err
 			}
-			zipFileReader.Close()
+			_ = zipFileReader.Close()
 		}
-		zipReader.Close()
+		_ = zipReader.Close()
 	}
 	return nil
 }
@@ -444,6 +450,7 @@ func ConfirmYN(text string, value bool, style *pterm.Style) bool {
 	return show
 }
 
+//goland:noinspection GoUnusedExportedFunction
 func CopyDir(src string, dst string) error {
 	return filepath.WalkDir(src, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
@@ -525,10 +532,10 @@ func FailedDownloadHandler(attempts, m int, file structs.File, mirror string, mi
 		pterm.Warning.Printfln("Failed to download file %s from %s, retrying in %s", file.Name, mirror, sleepTime.String())
 		time.Sleep(sleepTime)
 		return true, false, nil
-	} else if attempts >= 2 && m < len(mirrors)-1 {
+	} else if attempts >= 2 && m < len(mirrors)-1 { // TODO: Validate this
 		pterm.Warning.Printfln("Failed to download file %s from %s, trying next mirror", file.Name, mirror)
 		return false, true, nil
-	} else if attempts >= 2 && m == len(mirrors)-1 {
+	} else if attempts >= 2 && m == len(mirrors)-1 { // TODO: Validate this
 		return false, false, fmt.Errorf("failed to download file %s from %s, all attempts and mirrors failed", file.Name, mirror)
 	}
 	return false, false, fmt.Errorf("something went wrong, please contact FTB support")

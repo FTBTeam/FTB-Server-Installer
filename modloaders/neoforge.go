@@ -190,7 +190,7 @@ func (s NeoForge) startScript(ownJava bool) error {
 			lines = append(lines, line)
 		}
 
-		file.Close()
+		_ = file.Close()
 
 		// Rewrite the file with our changes
 		file, _ = os.Create(runScriptPath)

@@ -203,6 +203,11 @@ func main() {
 
 	var filesToDownload []structs.File
 
+	if selectedProvider == nil {
+		pterm.Fatal.Println("No provider selected")
+		return
+	}
+
 	// Get modpack details from the provider
 	modpack, err := selectedProvider.GetModpack()
 	if err != nil {
@@ -242,7 +247,7 @@ func main() {
 		Files:          modpackVersion.Files,
 	}
 
-	// Check if the install location exists, if it doesnt, ask if they want to create the folder(s)
+	// Check if the install location exists, if it doesn't, ask if they want to create the folder(s)
 	exists, err := util.PathExists(installDir)
 	if err != nil {
 		selectedProvider.FailedInstall()
@@ -300,8 +305,8 @@ func main() {
 			}
 
 			/*
-				Check the manifest to see if its the same modpack installed, if its not the same modpack then ask the user
-				if they intened to install a different modpack and the issues that can arrise for it.
+				Check the manifest to see if it's the same modpack installed, if it's not the same modpack then ask the user
+				if they intend to install a different modpack and the issues that can arise for it.
 				If auto is specified but not the force flag show a warning and exit
 			*/
 			isSamePack := isSameModpack(existingManifest, manifest)
@@ -388,7 +393,7 @@ func main() {
 		jreAlreadyExists = true
 	}
 
-	// If noJava is set or we already have java downloaded, we skip the java download
+	// If noJava is set, or we already have java downloaded, we skip the java download
 	if !noJava && !auto && !jreAlreadyExists {
 		noJava = !util.ConfirmYN("Do you want to download java?", true, pterm.Info.MessageStyle)
 	}
@@ -430,7 +435,7 @@ func main() {
 			}
 		}
 
-		// Remove unchanged files from filesToDownload, we dont want to r edownload unchanged files
+		// Remove unchanged files from filesToDownload, we don't want to re-download unchanged files
 		for _, f := range unchangedFiles {
 			for i, v := range filesToDownload {
 				if v.Name == f.Name && v.Path == f.Path {
@@ -480,7 +485,7 @@ func main() {
 			selectedProvider.FailedInstall()
 			pterm.Fatal.Println("Error extracting java archive:", err.Error())
 		}
-		javaFile.Close()
+		_ = javaFile.Close()
 		err = os.Remove(filepath.Join(installDir, java.Name))
 		if err != nil {
 			pterm.Warning.Println("Error removing java archive:", err.Error())
@@ -637,6 +642,9 @@ func doDownload(file structs.File) error {
 				} else if c {
 					continue
 				}
+			}
+			if dl == nil {
+				return errors.New(fmt.Sprintf("download object is nil for file %s", file.Name))
 			}
 			if file.Hash != "" {
 				hexHash, _ := hex.DecodeString(file.Hash)

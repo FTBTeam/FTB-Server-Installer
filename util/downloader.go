@@ -5,13 +5,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/pterm/pterm"
 	"hash"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/pterm/pterm"
 )
 
 type Download struct {
@@ -36,7 +37,7 @@ func NewDownload(destPath string, reqUrl string) (*Download, error) {
 	}, nil
 }
 
-// Do performs the file download with the configured parameters.
+// Do perform the file download with the configured parameters.
 // It handles directory creation, checksum verification, and cleanup on error if configured.
 // Returns an error if the download or verification fails.
 func (dl *Download) Do() error {

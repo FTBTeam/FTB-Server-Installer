@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"ftb-server-downloader/structs"
 	"ftb-server-downloader/util"
-	"github.com/pterm/pterm"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
+
+	"github.com/pterm/pterm"
 )
 
 const fabricMeta = "https://meta.fabricmc.net"

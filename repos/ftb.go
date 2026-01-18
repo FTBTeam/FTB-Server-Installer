@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"ftb-server-downloader/structs"
 	"ftb-server-downloader/util"
-	"github.com/pterm/pterm"
 	"sort"
 	"strings"
+
+	"github.com/pterm/pterm"
 )
 
 const (
@@ -101,18 +102,20 @@ func (m *FTB) GetVersion() (structs.ModpackVersion, error) {
 
 func (m *FTB) SuccessfulInstall() {
 	url := fmt.Sprintf("%s/modpack/%d/%d/serverInstall/success", ftbApiUrl, m.PackId, m.VersionId)
-	_, err := util.DoGet(url)
+	resp, err := util.DoGet(url)
 	if err != nil {
 		pterm.Debug.WithMessageStyle(pterm.Error.MessageStyle).Printfln("Error while sending successful install request to ftb: %s", err)
 	}
+	_ = resp.Body.Close()
 }
 
 func (m *FTB) FailedInstall() {
 	url := fmt.Sprintf("%s/modpack/%d/%d/serverInstall/failure", ftbApiUrl, m.PackId, m.VersionId)
-	_, err := util.DoGet(url)
+	resp, err := util.DoGet(url)
 	if err != nil {
 		pterm.Debug.WithMessageStyle(pterm.Error.MessageStyle).Printfln("Error while sending failed install request to ftb: %s", err)
 	}
+	_ = resp.Body.Close()
 }
 
 func (m *FTB) SetVersionId(versionId int) {

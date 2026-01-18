@@ -2,6 +2,7 @@ package repos
 
 import (
 	"ftb-server-downloader/structs"
+
 	"github.com/pterm/pterm"
 )
 
@@ -14,6 +15,7 @@ type CurseForge struct {
 	VersionId int
 }
 
+//goland:noinspection GoUnusedExportedFunction
 func GetCurseForge(packId, versionId int) *CurseForge {
 	return &CurseForge{
 		PackId:    packId,
@@ -35,10 +37,10 @@ func (v *CurseForge) SetVersionId(versionId int) {
 	v.VersionId = versionId
 }
 
-func (m *CurseForge) SuccessfulInstall() {
+func (v *CurseForge) SuccessfulInstall() {
 	return
 }
 
-func (m *CurseForge) FailedInstall() {
+func (v *CurseForge) FailedInstall() {
 	return
 }

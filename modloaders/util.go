@@ -3,11 +3,12 @@ package modloaders
 import (
 	"fmt"
 	"ftb-server-downloader/util"
-	semVer "github.com/hashicorp/go-version"
-	"github.com/pterm/pterm"
 	"io"
 	"os"
 	"path/filepath"
+
+	semVer "github.com/hashicorp/go-version"
+	"github.com/pterm/pterm"
 )
 
 func Log4JFixer(installDir string, mcVersion string) (string, error) {

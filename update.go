@@ -6,14 +6,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"ftb-server-downloader/util"
-	semver "github.com/hashicorp/go-version"
-	"github.com/minio/selfupdate"
-	"github.com/pterm/pterm"
 	"io"
 	"net/http"
 	"os"
 	"runtime"
 	"strings"
+
+	semver "github.com/hashicorp/go-version"
+	"github.com/minio/selfupdate"
+	"github.com/pterm/pterm"
 )
 
 const (
@@ -37,7 +38,7 @@ type VersionInfo struct {
 }
 
 func checkForUpdate() (VersionInfo, error) {
-	var versionInfo VersionInfo = VersionInfo{
+	var versionInfo = VersionInfo{
 		UpdateAvailable:     false,
 		CurrentVersion:      util.ReleaseVersion,
 		LatestVersion:       "",
