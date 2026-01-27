@@ -17,7 +17,7 @@ jobs:
         goos: [ windows ]
         goarch: [ amd64, arm64 ]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ./
         name: "Common Setup"
 
@@ -31,7 +31,7 @@ jobs:
           azuresigntool sign -kvu ${{ secrets.AZURE_KEY_VAULT_URL }} -kvi ${{ secrets.AZURE_KEY_VAULT_CLIENT_ID }} -kvs ${{ secrets.AZURE_KEY_VAULT_CLIENT_SECRET }} -kvc ${{ secrets.AZURE_KEY_VAULT_CERTIFICATE_NAME }} -kvt ${{ secrets.AZURE_KEY_VAULT_TENANT_ID }} -tr http://timestamp.digicert.com -v out\ftb-server-${{ matrix.goos }}-${{ matrix.goarch }}.exe
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: release-windows-${{ matrix.goarch }}
           path: |
@@ -45,7 +45,7 @@ jobs:
         goos: [ darwin ]
         goarch: [ amd64, arm64 ]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ./
         name: "Common Setup"
 
@@ -86,7 +86,7 @@ jobs:
           xcrun notarytool submit "ftb-server_signed.zip" --key "./apple_api_key.p8" --key-id ${{ secrets.APPLE_API_KEY_ID }} --issuer ${{ secrets.APPLE_API_ISSUER }} --wait
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: release-macos-${{ matrix.goarch }}
           path: |
@@ -101,7 +101,7 @@ jobs:
         goos: [ linux, freebsd ]
         goarch: [ amd64, arm64 ]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ./
         name: "Common Setup"
 
@@ -156,7 +156,7 @@ jobs:
         packs: ${{ fromJson(needs.generate-matrix.outputs.packids) }}
     steps:
       - name: Download linux amd64 artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: release-linux-amd64
           path: release/
@@ -177,55 +177,55 @@ jobs:
       - test-installer
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       # Windows
       - name: Download windows amd64 artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: release-windows-amd64
           path: release/
 
       - name: Download windows arm64 artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: release-windows-arm64
           path: release/
 
       # Macos
       - name: Download macos amd64 artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: release-macos-amd64
           path: release/
 
       - name: Download macos arm64 artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: release-macos-arm64
           path: release/
 
       # Linux
       - name: Download linux arm64 artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: release-linux-arm64
           path: release/
 
       - name: Download linux amd64 artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: release-linux-amd64
           path: release/
 
       - name: Download freebsd arm64 artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: release-freebsd-arm64
           path: release/
 
       - name: Download freebsd amd64 artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: release-freebsd-amd64
           path: release/
