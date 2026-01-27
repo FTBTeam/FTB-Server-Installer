@@ -11,10 +11,9 @@ runs:
         echo "GITHUB_SHA_SHORT=$(echo $GITHUB_SHA | cut -c 1-6)" >> $GITHUB_ENV
 
     - name: Setup Go
-      uses: actions/setup-go@v5
+      uses: actions/setup-go@v6
       with:
-        go-version: 1.25
-        cache-dependency-path: go.sum
+        go-version-file: 'go.mod'
 
     - name: Install dependencies
       shell: bash
