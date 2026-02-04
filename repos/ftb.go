@@ -105,6 +105,7 @@ func (m *FTB) SuccessfulInstall() {
 	resp, err := util.DoGet(url)
 	if err != nil {
 		pterm.Debug.WithMessageStyle(pterm.Error.MessageStyle).Printfln("Error while sending successful install request to ftb: %s", err)
+		return
 	}
 	_ = resp.Body.Close()
 }
@@ -114,6 +115,7 @@ func (m *FTB) FailedInstall() {
 	resp, err := util.DoGet(url)
 	if err != nil {
 		pterm.Debug.WithMessageStyle(pterm.Error.MessageStyle).Printfln("Error while sending failed install request to ftb: %s", err)
+		return
 	}
 	_ = resp.Body.Close()
 }
