@@ -58,8 +58,9 @@ func (s Forge) GetDownload() ([]structs.File, error) {
 	}
 
 	mlFiles = append(mlFiles, structs.File{
-		Name: jarName,
-		Url:  installerUrl,
+		Name:               jarName,
+		Url:                installerUrl,
+		CheckContentLength: true,
 	})
 	return mlFiles, nil
 }

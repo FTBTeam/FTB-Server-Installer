@@ -48,8 +48,9 @@ func (s Fabric) GetDownload() ([]structs.File, error) {
 	var mlFiles []structs.File
 
 	mlFiles = append(mlFiles, structs.File{
-		Name: fmt.Sprintf("fabric-installer-%s.jar", s.FabricInstaller.Version),
-		Url:  s.FabricInstaller.URL,
+		Name:               fmt.Sprintf("fabric-installer-%s.jar", s.FabricInstaller.Version),
+		Url:                s.FabricInstaller.URL,
+		CheckContentLength: true,
 	})
 
 	return mlFiles, nil
