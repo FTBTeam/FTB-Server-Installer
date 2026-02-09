@@ -20,12 +20,13 @@ type ModpackVersion struct {
 }
 
 type File struct {
-	Name     string   `json:"name"`
-	Path     string   `json:"path"`
-	Url      string   `json:"url"`
-	Mirrors  []string `json:"mirrors"`
-	Hash     string   `json:"hash"`
-	HashType string   `json:"hash_type"`
+	Name               string   `json:"name"`
+	Path               string   `json:"path"`
+	Url                string   `json:"url"`
+	Mirrors            []string `json:"mirrors"`
+	Hash               string   `json:"hash"`
+	HashType           string   `json:"hash_type"`
+	CheckContentLength bool     `json:"check_content_length"`
 }
 
 type ModLoaderTarget struct {

@@ -657,6 +657,7 @@ func doDownload(file structs.File) error {
 					pterm.Warning.Printfln("Unsupported hash type: %s", file.HashType)
 				}
 			}
+			dl.CheckContentLength(file.CheckContentLength)
 			err = dl.Do()
 			if err != nil {
 				pterm.Error.Printfln("Download request error: %s", err.Error())
