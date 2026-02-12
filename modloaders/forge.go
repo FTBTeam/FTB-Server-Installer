@@ -106,7 +106,13 @@ func (s Forge) Install(useOwnJava bool) error {
 			}
 		}
 		pterm.Success.Println("Forge installed successfully")
-		// _ = os.Remove(filepath.Join(s.InstallDir, jarName) + ".log")
+		mcJarWithVer := filepath.Join(s.InstallDir, fmt.Sprintf("minecraft_server.%s.jar", s.Targets.McVersion))
+		if mcJar, _ := util.PathExists(mcJarWithVer); mcJar {
+			err := os.Rename(mcJarWithVer, filepath.Join(s.InstallDir, "minecraft_server.jar"))
+			if err != nil {
+				pterm.Warning.Println(err)
+			}
+		}
 		_ = os.Remove(filepath.Join(s.InstallDir, jarName))
 	} else if filepath.Ext(jarName) == ".zip" {
 		pathExists, err := util.PathExists(filepath.Join(s.InstallDir, fmt.Sprintf("minecraft_server.%s.jar", s.Targets.McVersion)))
@@ -275,8 +281,7 @@ func (s Forge) startScript(ownJava bool) error {
 
 		var re *regexp.Regexp
 		if mcVer.GreaterThan(preForgeJarVer) {
-			re = regexp.MustCompile(`^forge-(\d+.\d+.\d+)-(\d+.\d+.\d+(.\d+)?)(-\d+.\d+.\d+)?(-[a-zA-Z]+)?.jar$`)
-
+			re = regexp.MustCompile(`^(minecraft)?forge(-universal)?-(\d+.\d+.\d+)-(\d+.\d+.\d+(.\d+)?)(-\d+.\d+.\d+)?(-[a-zA-Z]+)?.jar$`)
 		} else {
 			re = regexp.MustCompile(`^minecraft_server.(\d+.\d+.\d+)?.jar$`)
 		}
