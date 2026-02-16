@@ -107,7 +107,7 @@ func (s Forge) Install(useOwnJava bool) error {
 		}
 		pterm.Success.Println("Forge installed successfully")
 		mcJarWithVer := filepath.Join(s.InstallDir, fmt.Sprintf("minecraft_server.%s.jar", s.Targets.McVersion))
-		if mcJar, _ := util.PathExists(mcJarWithVer); mcJar {
+		if mcJar, _ := util.PathExists(mcJarWithVer); mcJar && s.Targets.McVersion != "1.12.2" {
 			err := os.Rename(mcJarWithVer, filepath.Join(s.InstallDir, "minecraft_server.jar"))
 			if err != nil {
 				pterm.Warning.Println(err)
