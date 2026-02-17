@@ -553,6 +553,11 @@ func main() {
 
 // getProvider Gets and sets up the repo provider
 func getProvider() (repos.ModpackRepo, error) {
+	if apiKey == "public" {
+		if envAPIKey, ok := os.LookupEnv("FTB_MODPACK_API_KEY"); ok {
+			apiKey = envAPIKey
+		}
+	}
 	util.ApiKey = apiKey
 	switch provider {
 	case "ftb":
