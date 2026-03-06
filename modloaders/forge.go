@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"slices"
 	"strings"
 
 	semVer "github.com/hashicorp/go-version"
@@ -21,7 +22,10 @@ const (
 )
 
 var (
-	jarName string
+	jarName          string
+	versionsToRename = []string{
+		"1.5.2",
+	}
 )
 
 type Forge struct {
@@ -107,7 +111,7 @@ func (s Forge) Install(useOwnJava bool) error {
 		}
 		pterm.Success.Println("Forge installed successfully")
 		mcJarWithVer := filepath.Join(s.InstallDir, fmt.Sprintf("minecraft_server.%s.jar", s.Targets.McVersion))
-		if mcJar, _ := util.PathExists(mcJarWithVer); mcJar && s.Targets.McVersion != "1.12.2" {
+		if mcJar, _ := util.PathExists(mcJarWithVer); mcJar && slices.Contains(versionsToRename, s.Targets.McVersion) {
 			err := os.Rename(mcJarWithVer, filepath.Join(s.InstallDir, "minecraft_server.jar"))
 			if err != nil {
 				pterm.Warning.Println(err)
