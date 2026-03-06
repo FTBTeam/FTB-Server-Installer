@@ -285,7 +285,7 @@ func (s Forge) startScript(ownJava bool) error {
 
 		var re *regexp.Regexp
 		if mcVer.GreaterThan(preForgeJarVer) {
-			re = regexp.MustCompile(`^(minecraft)?forge(-universal)?-(\d+.\d+.\d+)-(\d+.\d+.\d+(.\d+)?)(-\d+.\d+.\d+)?(-[a-zA-Z]+)?.jar$`)
+			re = regexp.MustCompile(`^(minecraft)?forge(-universal)?-(\d+.\d+.\d+)-(\d+.\d+.\d+(.\d+)?)(-\d+.\d+.\d+)?(.+)?.jar$`)
 		} else {
 			re = regexp.MustCompile(`^minecraft_server.(\d+.\d+.\d+)?.jar$`)
 		}
