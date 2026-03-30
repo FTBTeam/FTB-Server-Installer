@@ -1,5 +1,61 @@
 # Changelog
 
+## 1.0.40
+
+- Updated to golang 1.26
+- Removed logging fix (now fixed in pterm itself)
+- Updated packages
+
+## 1.0.39
+
+- Fix for forge file name regex
+
+## 1.0.38
+
+- Only rename MC server jar on specific versions 
+
+## 1.0.37
+
+- Check env variable (FTB_MODPACK_API_KEY) for API key
+
+## 1.0.36
+
+- Fix: dont rename MC jar on 1.12.2
+
+## 1.0.35
+
+- Fix 1.5.2 start script
+
+## 1.0.34
+
+- Check content length on modloader downloads
+
+## 1.0.33
+
+- Fix: Missing return on success/failed install
+
+## 1.0.32
+
+- Updated packages
+- Fix: `nogui` not being set
+- Fix: Close response body
+- Don't allow download threads to be less than 1
+- Fix: potential resource leaks and nil checks
+
+## 1.0.31
+
+- Fix: linux terminal not opening on double click
+- Updated packages
+
+## 1.0.30
+
+- Updated API auth headers
+- Updated packages
+
+## 1.0.29
+
+- Fix nogui not being added if you use system java
+
 ## 1.0.28
 
 - Fixed typo in Minecraft Forge install error message
