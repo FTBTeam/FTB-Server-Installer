@@ -111,14 +111,6 @@ func main() {
 	}
 
 	util.LogMw = io.MultiWriter(os.Stdout, util.NewCustomWriter(logFile))
-	// Temp fix for loggers not logging to file
-	pterm.Debug.Writer = nil
-	pterm.Info.Writer = nil
-	pterm.Warning.Writer = nil
-	pterm.Error.Writer = nil
-	pterm.Fatal.Writer = nil
-	pterm.Success.Writer = nil
-	pterm.Description.Writer = nil
 
 	log.SetOutput(util.LogMw)
 	pterm.SetDefaultOutput(util.LogMw)
