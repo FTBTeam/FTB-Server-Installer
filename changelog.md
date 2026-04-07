@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.41
+
+- Fix: NeoForge run.sh/bat not being updated to use own java on 26.x
+- Updated packages
+
 ## 1.0.40
 
 - Updated to golang 1.26

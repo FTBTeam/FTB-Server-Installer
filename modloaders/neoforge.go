@@ -167,8 +167,9 @@ func (s NeoForge) startScript(ownJava bool) error {
 		scanner := bufio.NewScanner(file)
 		for scanner.Scan() {
 			line := scanner.Text()
+			pterm.Debug.Println(line)
 
-			match, _ := regexp.MatchString("^(java).+$", line)
+			match, _ := regexp.MatchString("^(exec )?java.+$", line)
 			if match {
 				if ownJava {
 					pterm.Debug.Println("Replacing java path in run script")
@@ -176,8 +177,13 @@ func (s NeoForge) startScript(ownJava bool) error {
 					if err != nil {
 						return err
 					}
-					line = regexp.MustCompile("^java").
-						ReplaceAllString(line, fmt.Sprintf("\"%s\"", javaPath))
+					line = regexp.MustCompile("^(exec )?java").
+						ReplaceAllStringFunc(line, func(m string) string {
+							if strings.HasPrefix(m, "exec ") {
+								return fmt.Sprintf("exec \"%s\"", javaPath)
+							}
+							return fmt.Sprintf("\"%s\"", javaPath)
+						})
 				}
 
 				if runtime.GOOS == "windows" {
