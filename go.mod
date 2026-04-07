@@ -4,7 +4,7 @@ go 1.26.1
 
 require (
 	github.com/codeclysm/extract/v4 v4.0.0
-	github.com/hashicorp/go-version v1.8.0
+	github.com/hashicorp/go-version v1.9.0
 	github.com/minio/selfupdate v0.6.0
 	github.com/pterm/pterm v0.12.83
 	golang.org/x/term v0.41.0
