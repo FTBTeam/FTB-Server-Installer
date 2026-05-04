@@ -18,6 +18,7 @@ const (
 type FTB struct {
 	PackId    int
 	VersionId int
+	IsPrivate bool
 }
 
 func GetFTB(packId, versionId int) *FTB {
@@ -47,6 +48,7 @@ func (m *FTB) GetModpack() (structs.Modpack, error) {
 		return structs.Modpack{}, fmt.Errorf("unsuccessful response: %s, %s", ftbModpack.Status, ftbModpack.Message)
 	}
 
+	m.IsPrivate = ftbModpack.Private
 	var versionList []structs.ModpackV
 	for _, v := range ftbModpack.Versions {
 		ver := structs.ModpackV{
@@ -101,6 +103,10 @@ func (m *FTB) GetVersion() (structs.ModpackVersion, error) {
 }
 
 func (m *FTB) SuccessfulInstall() {
+	if m.IsPrivate {
+		// If pack is private don't send success request
+		return
+	}
 	url := fmt.Sprintf("%s/modpack/%d/%d/serverInstall/success", ftbApiUrl, m.PackId, m.VersionId)
 	resp, err := util.DoGet(url)
 	if err != nil {
@@ -111,6 +117,10 @@ func (m *FTB) SuccessfulInstall() {
 }
 
 func (m *FTB) FailedInstall() {
+	if m.IsPrivate {
+		// If pack is private don't send failure request
+		return
+	}
 	url := fmt.Sprintf("%s/modpack/%d/%d/serverInstall/failure", ftbApiUrl, m.PackId, m.VersionId)
 	resp, err := util.DoGet(url)
 	if err != nil {

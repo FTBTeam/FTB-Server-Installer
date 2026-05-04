@@ -8,6 +8,7 @@ type FTBModpack struct {
 	ID           int        `json:"id"`
 	Name         string     `json:"name"`
 	Type         string     `json:"type"`
+	Private      bool       `json:"private"`
 }
 type FTBTargets struct {
 	Version string `json:"version"`
