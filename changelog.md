@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.43
+
+- Updated packages and golang version
+  - Comes with minor security updates and bug fixes
+
+## 1.0.42
+
+- Updated packages and golang version
+- Stop sending success/fail requests to api if the modpack is private
+
 ## 1.0.41
 
 - Fix: NeoForge run.sh/bat not being updated to use own java on 26.x

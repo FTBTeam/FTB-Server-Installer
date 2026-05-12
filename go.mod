@@ -1,19 +1,19 @@
 module ftb-server-downloader
 
-go 1.26.2
+go 1.26.3
 
 require (
 	github.com/codeclysm/extract/v4 v4.0.0
 	github.com/hashicorp/go-version v1.9.0
 	github.com/minio/selfupdate v0.6.0
 	github.com/pterm/pterm v0.12.83
-	golang.org/x/term v0.42.0
+	golang.org/x/term v0.43.0
 )
 
 require (
 	aead.dev/minisign v0.3.0 // indirect
 	atomicgo.dev/cursor v0.2.0 // indirect
-	atomicgo.dev/keyboard v0.2.9 // indirect
+	atomicgo.dev/keyboard v0.2.10 // indirect
 	atomicgo.dev/schedule v0.1.0 // indirect
 	github.com/clipperhouse/uax29/v2 v2.7.0 // indirect
 	github.com/containerd/console v1.0.5 // indirect
@@ -25,7 +25,7 @@ require (
 	github.com/mattn/go-runewidth v0.0.23 // indirect
 	github.com/ulikunitz/xz v0.5.15 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
-	golang.org/x/crypto v0.50.0 // indirect
-	golang.org/x/sys v0.43.0 // indirect
-	golang.org/x/text v0.36.0 // indirect
+	golang.org/x/crypto v0.51.0 // indirect
+	golang.org/x/sys v0.44.0 // indirect
+	golang.org/x/text v0.37.0 // indirect
 )
