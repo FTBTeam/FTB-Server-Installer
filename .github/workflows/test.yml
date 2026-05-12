@@ -33,10 +33,10 @@ jobs:
       - name: Build
         env:
           CGO_ENABLED: "0"
-          GOOS: ${{ matrix.goos }}
-          GOARCH: ${{ matrix.goarch }}
+          GOOS: ${{ matrix.platform.goos }}
+          GOARCH: ${{ matrix.platform.goarch }}
         run: |
-          go build -o out/ftb-server-${{ matrix.goos }}-${{ matrix.goarch }}.exe -ldflags "-X 'ftb-server-downloader/util.GitCommit=$env:GITHUB_SHA_SHORT' -X 'ftb-server-downloader/util.ReleaseVersion=$env:GITHUB_REF_NAME'"
+          go build -o out/ftb-server-${{ matrix.platform.goos }}-${{ matrix.platform.goarch }}.exe -ldflags "-X 'ftb-server-downloader/util.GitCommit=$env:GITHUB_SHA_SHORT' -X 'ftb-server-downloader/util.ReleaseVersion=$env:GITHUB_REF_NAME'"
 
       - name: Windows Signing
         if: matrix.platform.name == 'windows'
@@ -58,7 +58,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v6
         with:
-          name: release-windows-${{ matrix.goarch }}
+          name: release-${{ matrix.platform.goos }}-${{ matrix.goarch }}
           path: |
             out/*
 
