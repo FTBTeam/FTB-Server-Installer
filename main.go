@@ -601,7 +601,7 @@ func downloadFiles(files ...structs.File) error {
 			}()
 			err := doDownload(f)
 			if err != nil {
-				pterm.Error.Printfln("Failed to download file: %s\nAll mirrors failed\n%s", f.Name, err.Error())
+				pterm.Error.Printfln("Failed to download file: %s\nAll mirrors failed\n%s", filepath.Join(f.Path, f.Name), err.Error())
 				pterm.Debug.Println(err)
 				os.Exit(1)
 			}
