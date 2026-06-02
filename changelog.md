@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.44
+
+- Log filepath of failed file download
+
 ## 1.0.43
 
 - Updated packages and golang version
