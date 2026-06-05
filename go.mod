@@ -1,6 +1,6 @@
 module ftb-server-downloader
 
-go 1.26.3
+go 1.26.4
 
 require (
 	github.com/codeclysm/extract/v4 v4.0.0
