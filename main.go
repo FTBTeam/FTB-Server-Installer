@@ -52,7 +52,8 @@ var (
 )
 
 func init() {
-	if runtime.GOOS == "linux" && !term.IsTerminal(int(os.Stdin.Fd())) {
+	// Only relaunch in terminal if we're on linux, we have no args (assumbly not a CI run), and we're not already in a terminal
+	if runtime.GOOS == "linux" && len(os.Args) <= 1 && !term.IsTerminal(int(os.Stdin.Fd())) {
 		util.RelaunchInTerminal()
 		return
 	}
