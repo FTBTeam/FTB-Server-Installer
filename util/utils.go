@@ -35,6 +35,7 @@ var (
 	ReleaseVersion string
 	GitCommit      string
 	ApiKey         string
+	CfApiKey       string
 	UserAgent      string
 	LogMw          io.Writer
 	BackoffTimes   = []time.Duration{
