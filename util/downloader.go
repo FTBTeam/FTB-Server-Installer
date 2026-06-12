@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/pterm/pterm"
@@ -50,6 +51,9 @@ func (dl *Download) Do() error {
 		return err
 	}
 
+	if strings.HasPrefix(dl.reqURL, "https://edge.forgecdn.net/files") {
+		req.Header.Set("x-api-key", CfApiKey)
+	}
 	req.Header.Set("User-Agent", UserAgent)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
