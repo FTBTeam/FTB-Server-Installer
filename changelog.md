@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.46
+
+- Feat: Support new api requirements for CurseForge downloads
+
 ## 1.0.45
 
 - Fix: Don't relaunch in a terminal if args are passed in
