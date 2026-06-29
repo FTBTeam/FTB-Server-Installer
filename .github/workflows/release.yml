@@ -162,7 +162,7 @@ jobs:
         packs: ${{ fromJson(needs.generate-matrix.outputs.packids) }}
     steps:
       - name: Download linux amd64 artifact
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: release-linux-amd64
           path: release/
@@ -187,51 +187,51 @@ jobs:
 
       # Windows
       - name: Download windows amd64 artifact
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: release-windows-amd64
           path: release/
 
       - name: Download windows arm64 artifact
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: release-windows-arm64
           path: release/
 
       # Macos
       - name: Download macos amd64 artifact
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: release-macos-amd64
           path: release/
 
       - name: Download macos arm64 artifact
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: release-macos-arm64
           path: release/
 
       # Linux
       - name: Download linux arm64 artifact
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: release-linux-arm64
           path: release/
 
       - name: Download linux amd64 artifact
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: release-linux-amd64
           path: release/
 
       - name: Download freebsd arm64 artifact
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: release-freebsd-arm64
           path: release/
 
       - name: Download freebsd amd64 artifact
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: release-freebsd-amd64
           path: release/
