@@ -20,7 +20,7 @@ jobs:
           - goarch: "riscv64"
             goos: "windows"
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: ./
         name: "Common Setup"
 

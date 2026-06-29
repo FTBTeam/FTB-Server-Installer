@@ -17,7 +17,7 @@ jobs:
         goos: [ windows ]
         goarch: [ amd64, arm64 ]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: ./
         name: "Common Setup"
 
@@ -47,7 +47,7 @@ jobs:
         goos: [ darwin ]
         goarch: [ amd64, arm64 ]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: ./
         name: "Common Setup"
 
@@ -105,7 +105,7 @@ jobs:
         goos: [ linux, freebsd ]
         goarch: [ amd64, arm64 ]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: ./
         name: "Common Setup"
 
@@ -183,7 +183,7 @@ jobs:
       - test-installer
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       # Windows
       - name: Download windows amd64 artifact
