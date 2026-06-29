@@ -31,7 +31,7 @@ jobs:
           CGO_ENABLED=0 GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -o out/ftb-server-${{ matrix.goos }}-${{ matrix.goarch }} -ldflags "-X 'ftb-server-downloader/util.CfApiKey=$CF_API_KEY' -X 'ftb-server-downloader/util.GitCommit=$GITHUB_SHA_SHORT' -X 'ftb-server-downloader/util.ReleaseVersion=99.99.99-Dev'"
 
       - name: Archive production artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: ftb-server-${{ matrix.goos }}-${{ matrix.goarch }}
           overwrite: true
