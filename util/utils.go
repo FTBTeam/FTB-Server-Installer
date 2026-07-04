@@ -2,8 +2,6 @@ package util
 
 import (
 	"archive/zip"
-	"crypto/sha1"
-	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -353,31 +351,6 @@ func validJavaArch(version string) (string, error) {
 		}
 	}
 	return "", errors.New("unsupported architecture, please contact FTB support")
-}
-
-func FileHash(path string, hash string) (string, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return "", err
-	}
-	defer f.Close()
-
-	switch hash {
-	case "sha1":
-		h := sha1.New()
-		if _, err = io.Copy(h, f); err != nil {
-			return "", err
-		}
-		return fmt.Sprintf("%x", h.Sum(nil)), nil
-	case "sha256":
-		h := sha256.New()
-		if _, err = io.Copy(h, f); err != nil {
-			return "", err
-		}
-		return fmt.Sprintf("%x", h.Sum(nil)), nil
-	default:
-		return "", errors.New("unsupported hash type")
-	}
 }
 
 func CombineZip(inZip string, destZip string) error {

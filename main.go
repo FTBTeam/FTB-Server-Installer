@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/codeclysm/extract/v4"
+	"github.com/ftbteam/keystone"
 	"github.com/pterm/pterm"
 	"github.com/pterm/pterm/putils"
 	"golang.org/x/term"
@@ -689,11 +690,12 @@ func runValidation(manifest structs.Manifest) error {
 	var invalidFiles []structs.File
 	for _, f := range manifest.Files {
 		if f.HashType != "" && f.Hash != "" {
-			fileHash, err := util.FileHash(filepath.Join(installDir, f.Path, f.Name), f.HashType)
+			fileHash, err := processValidationFiles(f)
 			if err != nil {
 				pterm.Error.Println("Error getting file hash:", err.Error())
 				continue
 			}
+
 			if fileHash != f.Hash {
 				pterm.Warning.Printfln("Unexpected file hash from %s\nExpected: %s\nGot: %s", f.Name, f.Hash, fileHash)
 				invalidFiles = append(invalidFiles, f)
@@ -720,6 +722,21 @@ func runValidation(manifest structs.Manifest) error {
 	}
 
 	return nil
+}
+
+func processValidationFiles(f structs.File) (string, error) {
+	packFile, err := os.Open(filepath.Join(installDir, f.Path, f.Name))
+	if err != nil {
+		return "", err
+	}
+	defer packFile.Close()
+
+	hashType, err := keystone.CryptoFromString(f.HashType)
+	if err != nil {
+		return "", err
+	}
+
+	return keystone.FileHash(packFile, hashType)
 }
 
 func isSameModpack(currentManifest, newManifest structs.Manifest) bool {

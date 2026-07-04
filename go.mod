@@ -4,6 +4,7 @@ go 1.26.4
 
 require (
 	github.com/codeclysm/extract/v4 v4.0.0
+	github.com/ftbteam/keystone v0.0.4
 	github.com/hashicorp/go-version v1.9.0
 	github.com/minio/selfupdate v0.6.0
 	github.com/pterm/pterm v0.12.83
@@ -15,6 +16,7 @@ require (
 	atomicgo.dev/cursor v0.2.0 // indirect
 	atomicgo.dev/keyboard v0.2.10 // indirect
 	atomicgo.dev/schedule v0.1.0 // indirect
+	github.com/aviddiviner/go-murmur v0.0.0-20150519214947-b9740d71e571 // indirect
 	github.com/clipperhouse/uax29/v2 v2.7.0 // indirect
 	github.com/containerd/console v1.0.5 // indirect
 	github.com/gookit/color v1.6.1 // indirect
