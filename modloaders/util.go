@@ -42,6 +42,7 @@ func Log4JFixer(installDir string, mcVersion string) (string, error) {
 		}
 
 		if !resp.IsSuccessState() {
+			_ = os.Remove(filepath.Join(installDir, patchesPath, "log4j2_17-111.xml"))
 			return "", fmt.Errorf("failed to download log4j fix: %s", resp.Status)
 		}
 
@@ -60,6 +61,7 @@ func Log4JFixer(installDir string, mcVersion string) (string, error) {
 		}
 
 		if !resp.IsSuccessState() {
+			_ = os.Remove(filepath.Join(installDir, patchesPath, "log4j2_112-116.xml"))
 			return "", fmt.Errorf("failed to download log4j fix: %s", resp.Status)
 		}
 		return fmt.Sprintf("-Dlog4j.configurationFile=%s", filepath.Join(patchesPath, "log4j2_112-116.xml")), nil
