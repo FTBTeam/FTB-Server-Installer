@@ -41,8 +41,7 @@ var (
 		3 * time.Second,
 		10 * time.Second,
 	}
-	ReqClient = req.C().
-			SetTimeout(60 * time.Second)
+	ReqClient = req.C().SetTimeout(60 * time.Second)
 )
 
 func ParseInstallerName(filename string) (int, int, error) {
