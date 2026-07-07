@@ -142,7 +142,7 @@ func main() {
 		SetUserAgent(util.UserAgent)
 
 	util.ReqClient.OnBeforeRequest(func(c *req.Client, r *req.Request) (err error) {
-		if util.ApiKey != "public" && strings.Contains(r.RawURL, "api.feed-the-beast.com") {
+		if util.ApiKey != "public" && strings.HasPrefix(r.RawURL, "https://api.feed-the-beast.com") {
 			r.SetHeader("Authorization", fmt.Sprintf("Bearer %s", util.ApiKey))
 		}
 		return nil

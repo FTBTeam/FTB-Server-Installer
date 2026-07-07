@@ -39,7 +39,7 @@ func GetFabric(target structs.ModpackTargets, memory structs.Memory, installDir 
 		InstallDir:      installDir,
 		Targets:         target,
 		Memory:          memory,
-		FabricInstaller: (*fabricInstaller)[0],
+		FabricInstaller: fabricInstaller[0],
 	}, nil
 }
 
@@ -102,7 +102,7 @@ func (s Fabric) Install(useOwnJava bool) error {
 	return nil
 }
 
-func getInstaller() (*[]FabricInstaller, error) {
+func getInstaller() ([]FabricInstaller, error) {
 	url := fmt.Sprintf("%s/v2/versions/installer", fabricMeta)
 
 	var fabricInstaller []FabricInstaller
@@ -117,7 +117,7 @@ func getInstaller() (*[]FabricInstaller, error) {
 		return nil, fmt.Errorf("error getting fabric installer from %s (%s)", url, resp.Status)
 	}
 
-	return &fabricInstaller, nil
+	return fabricInstaller, nil
 }
 
 func (s Fabric) startScript(ownJava bool) error {

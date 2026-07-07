@@ -23,14 +23,14 @@ func GetCurseForge(packId, versionId int) *CurseForge {
 	}
 }
 
-func (v *CurseForge) GetModpack() (structs.Modpack, error) {
+func (v *CurseForge) GetModpack() (*structs.Modpack, error) {
 	pterm.Info.Printfln("Getting modpack with id %d from CurseForge", v.PackId)
-	return structs.Modpack{}, nil
+	return nil, nil
 }
 
-func (v *CurseForge) GetVersion() (structs.ModpackVersion, error) {
+func (v *CurseForge) GetVersion() (*structs.ModpackVersion, error) {
 	pterm.Info.Printfln("Getting modpack version with id %d from CurseForge", v.PackId)
-	return structs.ModpackVersion{}, nil
+	return nil, nil
 }
 
 func (v *CurseForge) SetVersionId(versionId int) {
