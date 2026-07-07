@@ -391,7 +391,7 @@ func main() {
 		}
 	}
 	// Ask the user if they want to download java then set the noJava flag depending on their answer
-	var java *structs.File
+	var java structs.File
 	jreAlreadyExists := false
 	jrePath, _ := util.GetJavaPath(modpackVersion.Targets.JavaVersion)
 	if _, err = os.Stat(filepath.Join(installDir, jrePath)); err == nil {
@@ -408,7 +408,7 @@ func main() {
 			selectedProvider.FailedInstall()
 			pterm.Fatal.Println("Error getting java:", err.Error())
 		}
-		filesToDownload = append(filesToDownload, *java)
+		filesToDownload = append(filesToDownload, java)
 	}
 
 	if mkdir {

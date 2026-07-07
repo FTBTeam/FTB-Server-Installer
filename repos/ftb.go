@@ -1,6 +1,7 @@
 package repos
 
 import (
+	"errors"
 	"fmt"
 	"ftb-server-downloader/structs"
 	"ftb-server-downloader/util"
@@ -11,7 +12,7 @@ import (
 )
 
 const (
-	ftbApiUrl = "https://api.feed-the-beast.com/v1/modpacks"
+	ftbApiUrl = "https://api.feed-the-beast.com/v1/modpacks/modpack"
 )
 
 type FTB struct {
@@ -27,25 +28,26 @@ func GetFTB(packId, versionId int) *FTB {
 	}
 }
 
-func (m *FTB) GetModpack() (*structs.Modpack, error) {
-	url := fmt.Sprintf("%s/modpack/%d", ftbApiUrl, m.PackId)
+func (m *FTB) GetModpack() (structs.Modpack, error) {
+	url := fmt.Sprintf("%s/%d", ftbApiUrl, m.PackId)
 	pterm.Debug.Printfln("Getting modpack from ftb using %s", url)
 
 	var ftbModpack structs.FTBModpack
+	var ftbModpackErr structs.FTBModpackErr
 	resp, err := util.ReqClient.R().
 		SetSuccessResult(&ftbModpack).
-		SetErrorResult(&ftbModpack).
+		SetErrorResult(&ftbModpackErr).
 		Get(url)
 	if err != nil {
-		return nil, err
+		return structs.Modpack{}, err
 	}
 
-	if !resp.IsSuccessState() {
-		return nil, fmt.Errorf("unsuccessful response: %s, %s", resp.Status, ftbModpack.Message)
-	}
-
-	if ftbModpack.Status != "success" {
-		return nil, fmt.Errorf("unsuccessful response: %s, %s", ftbModpack.Status, ftbModpack.Message)
+	if !resp.IsSuccessState() || ftbModpack.Status != "success" {
+		errMsg := fmt.Sprintf("unsuccessful response: %s", resp.Status)
+		if ftbModpackErr.Message != "" {
+			errMsg = fmt.Sprintf("%s, %s", errMsg, ftbModpackErr.Message)
+		}
+		return structs.Modpack{}, errors.New(errMsg)
 	}
 
 	m.IsPrivate = ftbModpack.Private
@@ -62,38 +64,40 @@ func (m *FTB) GetModpack() (*structs.Modpack, error) {
 		return versionList[i].Id > versionList[j].Id
 	})
 
-	return &structs.Modpack{
+	return structs.Modpack{
 		Name:     ftbModpack.Name,
 		Id:       ftbModpack.ID,
 		Versions: versionList,
 	}, nil
 }
 
-func (m *FTB) GetVersion() (*structs.ModpackVersion, error) {
-	url := fmt.Sprintf("%s/modpack/%d/%d", ftbApiUrl, m.PackId, m.VersionId)
+func (m *FTB) GetVersion() (structs.ModpackVersion, error) {
+	url := fmt.Sprintf("%s/%d/%d", ftbApiUrl, m.PackId, m.VersionId)
 	pterm.Debug.Printfln("Getting modpack version from ftb using %s", url)
 
 	var ftbModpackVer structs.FTBVersion
+	var ftbModpackErr structs.FTBModpackErr
 	resp, err := util.ReqClient.R().
 		SetSuccessResult(&ftbModpackVer).
-		SetErrorResult(&ftbModpackVer).
+		SetErrorResult(&ftbModpackErr).
 		Get(url)
 	if err != nil {
-		return nil, err
+		return structs.ModpackVersion{}, err
 	}
-	if !resp.IsSuccessState() {
-		return nil, fmt.Errorf("unsuccessful response: %s, %s", resp.Status, ftbModpackVer.Message)
-	}
+	if !resp.IsSuccessState() || ftbModpackVer.Status != "success" {
+		errMsg := fmt.Sprintf("unsuccessful response: %s", resp.Status)
+		if ftbModpackErr.Message != "" {
+			errMsg = fmt.Sprintf("%s, %s", errMsg, ftbModpackErr.Message)
+		}
 
-	if ftbModpackVer.Status != "success" {
-		return nil, fmt.Errorf("unsuccessful response: %s, %s", ftbModpackVer.Status, ftbModpackVer.Message)
+		return structs.ModpackVersion{}, errors.New(errMsg)
 	}
 
 	var mem structs.Memory
 	mem.Minimum = ftbModpackVer.Specs.Minimum
 	mem.Recommended = ftbModpackVer.Specs.Recommended
 
-	return &structs.ModpackVersion{
+	return structs.ModpackVersion{
 		Id:      ftbModpackVer.ID,
 		Name:    ftbModpackVer.Name,
 		Targets: parseFTBTargets(ftbModpackVer.Targets),
@@ -108,10 +112,14 @@ func (m *FTB) SuccessfulInstall() {
 		return
 	}
 
-	url := fmt.Sprintf("%s/modpack/%d/%d/serverInstall/success", ftbApiUrl, m.PackId, m.VersionId)
-	_, err := util.ReqClient.R().Get(url)
+	url := fmt.Sprintf("%s/%d/%d/serverInstall/success", ftbApiUrl, m.PackId, m.VersionId)
+	resp, err := util.ReqClient.R().Get(url)
 	if err != nil {
-		pterm.Debug.WithMessageStyle(pterm.Error.MessageStyle).Printfln("Error while sending successful install request to ftb: %s", err)
+		pterm.Debug.WithMessageStyle(pterm.Error.MessageStyle).Printfln("Error while sending successful install request to ftb: %s", err.Error())
+		return
+	}
+	if !resp.IsSuccessState() {
+		pterm.Debug.WithMessageStyle(pterm.Error.MessageStyle).Printfln("Error while sending successful install request to ftb: %s", resp.Status)
 		return
 	}
 }
@@ -122,21 +130,22 @@ func (m *FTB) FailedInstall() {
 		return
 	}
 
-	url := fmt.Sprintf("%s/modpack/%d/%d/serverInstall/failure", ftbApiUrl, m.PackId, m.VersionId)
+	url := fmt.Sprintf("%s/%d/%d/serverInstall/failure", ftbApiUrl, m.PackId, m.VersionId)
 
-	_, err := util.ReqClient.R().Get(url)
+	resp, err := util.ReqClient.R().Get(url)
 	if err != nil {
-		pterm.Debug.WithMessageStyle(pterm.Error.MessageStyle).Printfln("Error while sending failed install request to ftb: %s", err)
+		pterm.Debug.WithMessageStyle(pterm.Error.MessageStyle).Printfln("Error while sending failed install request to ftb: %s", err.Error())
+		return
+	}
+	if !resp.IsSuccessState() {
+		pterm.Debug.WithMessageStyle(pterm.Error.MessageStyle).Printfln("Error while sending failed install request to ftb: %s", resp.Status)
+		return
 	}
 }
 
 func (m *FTB) SetVersionId(versionId int) {
 	m.VersionId = versionId
 }
-
-//func makeFTBUrl(m *FTB) string {
-//	return fmt.Sprintf("%s/%s", ftbApiUrl, m.ApiKey)
-//}
 
 func parseFTBTargets(targets []structs.FTBTargets) structs.ModpackTargets {
 	var modpackTargets structs.ModpackTargets

@@ -169,10 +169,10 @@ func OsJavaExists() bool {
 	return true
 }
 
-func GetJava(version string) (*structs.File, error) {
+func GetJava(version string) (structs.File, error) {
 	adoptiumUrl, err := makeAdoptiumUrl(version)
 	if err != nil {
-		return nil, err
+		return structs.File{}, err
 	}
 
 	var adoptium structs.Adoptium
@@ -181,11 +181,11 @@ func GetJava(version string) (*structs.File, error) {
 		SetSuccessResult(&adoptium).
 		Get(adoptiumUrl)
 	if err != nil {
-		return nil, err
+		return structs.File{}, err
 	}
 
 	if !resp.IsSuccessState() {
-		return nil, fmt.Errorf("failed to get java from adoptium: %s (%d)\n%s", resp.Status, resp.StatusCode, resp.String())
+		return structs.File{}, fmt.Errorf("failed to get java from adoptium: %s (%d)\n%s", resp.Status, resp.StatusCode, resp.String())
 	}
 
 	var fileExt string
@@ -197,7 +197,7 @@ func GetJava(version string) (*structs.File, error) {
 		fileExt = "" // shrug
 	}
 
-	return &structs.File{
+	return structs.File{
 		Name:     "jre" + fileExt,
 		Path:     "",
 		Url:      adoptium[0].Binaries[0].Package.Link,

@@ -15,20 +15,20 @@ type Vanilla struct {
 	Meta       LauncherMeta
 }
 
-func GetVanilla(target structs.ModpackTargets, installDir string) (*Vanilla, error) {
+func GetVanilla(target structs.ModpackTargets, installDir string) (Vanilla, error) {
 	var meta LauncherMeta
 	rawMeta, err := util.ReqClient.R().
 		SetSuccessResult(&meta).
 		Get(launcherMeta)
 	if err != nil {
-		return nil, err
+		return Vanilla{}, err
 	}
 
 	if !rawMeta.IsSuccessState() {
-		return nil, fmt.Errorf("failed to fetch launcher meta: %s", rawMeta.Status)
+		return Vanilla{}, fmt.Errorf("failed to fetch launcher meta: %s", rawMeta.Status)
 	}
 
-	return &Vanilla{
+	return Vanilla{
 		InstallDir: installDir,
 		Version:    target.McVersion,
 		Meta:       meta,

@@ -162,11 +162,7 @@ func (s Forge) Install(useOwnJava bool) error {
 func doesForgeExist(url string) bool {
 	resp, err := util.ReqClient.R().
 		Head(url)
-	if err != nil {
-		return false
-	}
-
-	if !resp.IsSuccessState() {
+	if err != nil || !resp.IsSuccessState() {
 		return false
 	}
 
