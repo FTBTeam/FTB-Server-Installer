@@ -26,6 +26,7 @@ import (
 
 	"github.com/codeclysm/extract/v4"
 	"github.com/ftbteam/keystone"
+	"github.com/imroc/req/v3"
 	"github.com/pterm/pterm"
 	"github.com/pterm/pterm/putils"
 	"golang.org/x/term"
@@ -134,6 +135,18 @@ func main() {
 	pterm.DefaultCenter.Println(logo)
 	pterm.DefaultCenter.WithCenterEachLineSeparately().Printfln("Server installer version: %s(%s)\n%s", util.ReleaseVersion, util.GitCommit, time.Now().UTC().Format(time.RFC1123))
 	pterm.DefaultCenter.WithCenterEachLineSeparately().Println(pterm.Bold.Sprintf("Installer Issue tracker\nhttps://github.com/FTBTeam/FTB-Server-Installer/issues"))
+
+	// Create request client with default values
+	util.ReqClient = req.C().
+		SetTimeout(10 * time.Second).
+		SetUserAgent(util.UserAgent)
+
+	util.ReqClient.OnBeforeRequest(func(c *req.Client, r *req.Request) (err error) {
+		if util.ApiKey != "public" && strings.Contains(r.RawURL, "api.feed-the-beast.com") {
+			r.SetHeader("Authorization", fmt.Sprintf("Bearer %s", util.ApiKey))
+		}
+		return nil
+	})
 
 	versionInfo, err := checkForUpdate()
 	if err != nil {
@@ -380,7 +393,7 @@ func main() {
 		}
 	}
 	// Ask the user if they want to download java then set the noJava flag depending on their answer
-	var java structs.File
+	var java *structs.File
 	jreAlreadyExists := false
 	jrePath, _ := util.GetJavaPath(modpackVersion.Targets.JavaVersion)
 	if _, err = os.Stat(filepath.Join(installDir, jrePath)); err == nil {
@@ -397,7 +410,7 @@ func main() {
 			selectedProvider.FailedInstall()
 			pterm.Fatal.Println("Error getting java:", err.Error())
 		}
-		filesToDownload = append(filesToDownload, java)
+		filesToDownload = append(filesToDownload, *java)
 	}
 
 	if mkdir {

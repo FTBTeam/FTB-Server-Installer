@@ -8,7 +8,6 @@ import (
 	"ftb-server-downloader/structs"
 	"io"
 	"io/fs"
-	"net/http"
 	"net/url"
 	"os"
 	"os/exec"
@@ -21,6 +20,7 @@ import (
 	"unicode"
 
 	semVer "github.com/hashicorp/go-version"
+	"github.com/imroc/req/v3"
 	"github.com/pterm/pterm"
 )
 
@@ -41,6 +41,7 @@ var (
 		3 * time.Second,
 		10 * time.Second,
 	}
+	ReqClient *req.Client
 )
 
 func ParseInstallerName(filename string) (int, int, error) {
@@ -62,53 +63,6 @@ func ParseInstallerName(filename string) (int, int, error) {
 	}
 
 	return pId, vId, nil
-}
-
-func makeRequest(method, url string, requestHeaders map[string][]string) (*http.Response, error) {
-	headers := map[string][]string{}
-	for k, v := range requestHeaders {
-		headers[k] = v
-	}
-	headers["User-Agent"] = []string{UserAgent}
-	if ApiKey != "public" && strings.Contains(url, "api.feed-the-beast.com") {
-		headers["Authorization"] = []string{fmt.Sprintf("Bearer %s", ApiKey)}
-	}
-	client := &http.Client{}
-	req, err := http.NewRequest(method, url, nil)
-	if err != nil {
-		return nil, err
-	}
-	req.Header = headers
-
-	return client.Do(req)
-}
-
-func DoGet(url string) (*http.Response, error) {
-	headers := map[string][]string{}
-	resp, err := makeRequest("GET", url, headers)
-	if err != nil {
-		return nil, err
-	}
-	if resp.StatusCode != 200 {
-		defer resp.Body.Close()
-		b, _ := io.ReadAll(resp.Body)
-		return nil, errors.New(fmt.Sprintf("Error: %d\n%s", resp.StatusCode, b))
-	}
-	return resp, nil
-}
-
-func DoHead(url string) (*http.Response, error) {
-	headers := map[string][]string{}
-	resp, err := makeRequest("HEAD", url, headers)
-	if err != nil {
-		return nil, err
-	}
-	if resp.StatusCode != 200 {
-		defer resp.Body.Close()
-		b, _ := io.ReadAll(resp.Body)
-		return nil, errors.New(fmt.Sprintf("Error: %d\n%s", resp.StatusCode, b))
-	}
-	return resp, nil
 }
 
 func IsEmptyDir(path string) (bool, error) {
@@ -214,23 +168,23 @@ func OsJavaExists() bool {
 	return true
 }
 
-func GetJava(version string) (structs.File, error) {
+func GetJava(version string) (*structs.File, error) {
 	adoptiumUrl, err := makeAdoptiumUrl(version)
 	if err != nil {
-		return structs.File{}, err
+		return nil, err
 	}
-
-	get, err := DoGet(adoptiumUrl)
-	if err != nil {
-		return structs.File{}, err
-	}
-	defer get.Body.Close()
 
 	var adoptium structs.Adoptium
 
-	err = json.NewDecoder(get.Body).Decode(&adoptium)
+	resp, err := ReqClient.R().
+		SetSuccessResult(&adoptium).
+		Get(adoptiumUrl)
 	if err != nil {
-		return structs.File{}, err
+		return nil, err
+	}
+
+	if !resp.IsSuccessState() {
+		return nil, fmt.Errorf("failed to get java from adoptium: %s (%d)\n%s", resp.Status, resp.StatusCode, resp.String())
 	}
 
 	var fileExt string
@@ -242,7 +196,7 @@ func GetJava(version string) (structs.File, error) {
 		fileExt = "" // shrug
 	}
 
-	return structs.File{
+	return &structs.File{
 		Name:     "jre" + fileExt,
 		Path:     "",
 		Url:      adoptium[0].Binaries[0].Package.Link,
