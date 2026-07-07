@@ -42,7 +42,7 @@ func (m *FTB) GetModpack() (structs.Modpack, error) {
 		return structs.Modpack{}, err
 	}
 
-	if !resp.IsSuccessState() || ftbModpack.Status != "success" {
+	if !resp.IsSuccessState() {
 		errMsg := fmt.Sprintf("unsuccessful response: %s", resp.Status)
 		if ftbModpackErr.Message != "" {
 			errMsg = fmt.Sprintf("%s, %s", errMsg, ftbModpackErr.Message)
@@ -84,7 +84,7 @@ func (m *FTB) GetVersion() (structs.ModpackVersion, error) {
 	if err != nil {
 		return structs.ModpackVersion{}, err
 	}
-	if !resp.IsSuccessState() || ftbModpackVer.Status != "success" {
+	if !resp.IsSuccessState() {
 		errMsg := fmt.Sprintf("unsuccessful response: %s", resp.Status)
 		if ftbModpackErr.Message != "" {
 			errMsg = fmt.Sprintf("%s, %s", errMsg, ftbModpackErr.Message)
