@@ -4,11 +4,15 @@ type FTBModpack struct {
 	Versions     []Versions `json:"versions"`
 	Notification string     `json:"notification"`
 	Status       string     `json:"status"`
-	Message      string     `json:"message,omitempty"`
 	ID           int        `json:"id"`
 	Name         string     `json:"name"`
 	Type         string     `json:"type"`
 	Private      bool       `json:"private"`
+}
+
+type FTBModpackErr struct {
+	Ok      bool   `json:"ok,omitempty"`
+	Message string `json:"message"`
 }
 type FTBTargets struct {
 	Version string `json:"version"`

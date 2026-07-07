@@ -160,11 +160,12 @@ func (s Forge) Install(useOwnJava bool) error {
 }
 
 func doesForgeExist(url string) bool {
-	resp, err := util.DoHead(url)
-	if err != nil {
+	resp, err := util.ReqClient.R().
+		Head(url)
+	if err != nil || !resp.IsSuccessState() {
 		return false
 	}
-	defer resp.Body.Close()
+
 	return true
 }
 

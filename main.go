@@ -26,6 +26,7 @@ import (
 
 	"github.com/codeclysm/extract/v4"
 	"github.com/ftbteam/keystone"
+	"github.com/imroc/req/v3"
 	"github.com/pterm/pterm"
 	"github.com/pterm/pterm/putils"
 	"golang.org/x/term"
@@ -134,6 +135,16 @@ func main() {
 	pterm.DefaultCenter.Println(logo)
 	pterm.DefaultCenter.WithCenterEachLineSeparately().Printfln("Server installer version: %s(%s)\n%s", util.ReleaseVersion, util.GitCommit, time.Now().UTC().Format(time.RFC1123))
 	pterm.DefaultCenter.WithCenterEachLineSeparately().Println(pterm.Bold.Sprintf("Installer Issue tracker\nhttps://github.com/FTBTeam/FTB-Server-Installer/issues"))
+
+	// Set request client user agent
+	util.ReqClient.SetUserAgent(util.UserAgent)
+
+	util.ReqClient.OnBeforeRequest(func(c *req.Client, r *req.Request) (err error) {
+		if util.ApiKey != "public" && strings.HasPrefix(r.RawURL, "https://api.feed-the-beast.com") {
+			r.SetHeader("Authorization", fmt.Sprintf("Bearer %s", util.ApiKey))
+		}
+		return nil
+	})
 
 	versionInfo, err := checkForUpdate()
 	if err != nil {
