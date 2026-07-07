@@ -136,10 +136,8 @@ func main() {
 	pterm.DefaultCenter.WithCenterEachLineSeparately().Printfln("Server installer version: %s(%s)\n%s", util.ReleaseVersion, util.GitCommit, time.Now().UTC().Format(time.RFC1123))
 	pterm.DefaultCenter.WithCenterEachLineSeparately().Println(pterm.Bold.Sprintf("Installer Issue tracker\nhttps://github.com/FTBTeam/FTB-Server-Installer/issues"))
 
-	// Create request client with default values
-	util.ReqClient = req.C().
-		SetTimeout(10 * time.Second).
-		SetUserAgent(util.UserAgent)
+	// Set request client user agent
+	util.ReqClient.SetUserAgent(util.UserAgent)
 
 	util.ReqClient.OnBeforeRequest(func(c *req.Client, r *req.Request) (err error) {
 		if util.ApiKey != "public" && strings.HasPrefix(r.RawURL, "https://api.feed-the-beast.com") {
