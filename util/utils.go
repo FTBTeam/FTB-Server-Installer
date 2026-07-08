@@ -2,15 +2,12 @@ package util
 
 import (
 	"archive/zip"
-	"crypto/sha1"
-	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"ftb-server-downloader/structs"
 	"io"
 	"io/fs"
-	"net/http"
 	"net/url"
 	"os"
 	"os/exec"
@@ -23,6 +20,7 @@ import (
 	"unicode"
 
 	semVer "github.com/hashicorp/go-version"
+	"github.com/imroc/req/v3"
 	"github.com/pterm/pterm"
 )
 
@@ -43,6 +41,7 @@ var (
 		3 * time.Second,
 		10 * time.Second,
 	}
+	ReqClient = req.C().SetTimeout(60 * time.Second)
 )
 
 func ParseInstallerName(filename string) (int, int, error) {
@@ -64,53 +63,6 @@ func ParseInstallerName(filename string) (int, int, error) {
 	}
 
 	return pId, vId, nil
-}
-
-func makeRequest(method, url string, requestHeaders map[string][]string) (*http.Response, error) {
-	headers := map[string][]string{}
-	for k, v := range requestHeaders {
-		headers[k] = v
-	}
-	headers["User-Agent"] = []string{UserAgent}
-	if ApiKey != "public" && strings.Contains(url, "api.feed-the-beast.com") {
-		headers["Authorization"] = []string{fmt.Sprintf("Bearer %s", ApiKey)}
-	}
-	client := &http.Client{}
-	req, err := http.NewRequest(method, url, nil)
-	if err != nil {
-		return nil, err
-	}
-	req.Header = headers
-
-	return client.Do(req)
-}
-
-func DoGet(url string) (*http.Response, error) {
-	headers := map[string][]string{}
-	resp, err := makeRequest("GET", url, headers)
-	if err != nil {
-		return nil, err
-	}
-	if resp.StatusCode != 200 {
-		defer resp.Body.Close()
-		b, _ := io.ReadAll(resp.Body)
-		return nil, errors.New(fmt.Sprintf("Error: %d\n%s", resp.StatusCode, b))
-	}
-	return resp, nil
-}
-
-func DoHead(url string) (*http.Response, error) {
-	headers := map[string][]string{}
-	resp, err := makeRequest("HEAD", url, headers)
-	if err != nil {
-		return nil, err
-	}
-	if resp.StatusCode != 200 {
-		defer resp.Body.Close()
-		b, _ := io.ReadAll(resp.Body)
-		return nil, errors.New(fmt.Sprintf("Error: %d\n%s", resp.StatusCode, b))
-	}
-	return resp, nil
 }
 
 func IsEmptyDir(path string) (bool, error) {
@@ -222,17 +174,17 @@ func GetJava(version string) (structs.File, error) {
 		return structs.File{}, err
 	}
 
-	get, err := DoGet(adoptiumUrl)
+	var adoptium structs.Adoptium
+
+	resp, err := ReqClient.R().
+		SetSuccessResult(&adoptium).
+		Get(adoptiumUrl)
 	if err != nil {
 		return structs.File{}, err
 	}
-	defer get.Body.Close()
 
-	var adoptium structs.Adoptium
-
-	err = json.NewDecoder(get.Body).Decode(&adoptium)
-	if err != nil {
-		return structs.File{}, err
+	if !resp.IsSuccessState() {
+		return structs.File{}, fmt.Errorf("failed to get java from adoptium: %s (%d)\n%s", resp.Status, resp.StatusCode, resp.String())
 	}
 
 	var fileExt string
@@ -353,31 +305,6 @@ func validJavaArch(version string) (string, error) {
 		}
 	}
 	return "", errors.New("unsupported architecture, please contact FTB support")
-}
-
-func FileHash(path string, hash string) (string, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return "", err
-	}
-	defer f.Close()
-
-	switch hash {
-	case "sha1":
-		h := sha1.New()
-		if _, err = io.Copy(h, f); err != nil {
-			return "", err
-		}
-		return fmt.Sprintf("%x", h.Sum(nil)), nil
-	case "sha256":
-		h := sha256.New()
-		if _, err = io.Copy(h, f); err != nil {
-			return "", err
-		}
-		return fmt.Sprintf("%x", h.Sum(nil)), nil
-	default:
-		return "", errors.New("unsupported hash type")
-	}
 }
 
 func CombineZip(inZip string, destZip string) error {

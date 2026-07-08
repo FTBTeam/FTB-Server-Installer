@@ -25,6 +25,8 @@ import (
 	"time"
 
 	"github.com/codeclysm/extract/v4"
+	"github.com/ftbteam/keystone"
+	"github.com/imroc/req/v3"
 	"github.com/pterm/pterm"
 	"github.com/pterm/pterm/putils"
 	"golang.org/x/term"
@@ -133,6 +135,16 @@ func main() {
 	pterm.DefaultCenter.Println(logo)
 	pterm.DefaultCenter.WithCenterEachLineSeparately().Printfln("Server installer version: %s(%s)\n%s", util.ReleaseVersion, util.GitCommit, time.Now().UTC().Format(time.RFC1123))
 	pterm.DefaultCenter.WithCenterEachLineSeparately().Println(pterm.Bold.Sprintf("Installer Issue tracker\nhttps://github.com/FTBTeam/FTB-Server-Installer/issues"))
+
+	// Set request client user agent
+	util.ReqClient.SetUserAgent(util.UserAgent)
+
+	util.ReqClient.OnBeforeRequest(func(c *req.Client, r *req.Request) (err error) {
+		if util.ApiKey != "public" && strings.HasPrefix(r.RawURL, "https://api.feed-the-beast.com") {
+			r.SetHeader("Authorization", fmt.Sprintf("Bearer %s", util.ApiKey))
+		}
+		return nil
+	})
 
 	versionInfo, err := checkForUpdate()
 	if err != nil {
@@ -689,11 +701,12 @@ func runValidation(manifest structs.Manifest) error {
 	var invalidFiles []structs.File
 	for _, f := range manifest.Files {
 		if f.HashType != "" && f.Hash != "" {
-			fileHash, err := util.FileHash(filepath.Join(installDir, f.Path, f.Name), f.HashType)
+			fileHash, err := processValidationFiles(f)
 			if err != nil {
 				pterm.Error.Println("Error getting file hash:", err.Error())
 				continue
 			}
+
 			if fileHash != f.Hash {
 				pterm.Warning.Printfln("Unexpected file hash from %s\nExpected: %s\nGot: %s", f.Name, f.Hash, fileHash)
 				invalidFiles = append(invalidFiles, f)
@@ -720,6 +733,21 @@ func runValidation(manifest structs.Manifest) error {
 	}
 
 	return nil
+}
+
+func processValidationFiles(f structs.File) (string, error) {
+	packFile, err := os.Open(filepath.Join(installDir, f.Path, f.Name))
+	if err != nil {
+		return "", err
+	}
+	defer packFile.Close()
+
+	hashType, err := keystone.CryptoFromString(f.HashType)
+	if err != nil {
+		return "", err
+	}
+
+	return keystone.FileHash(packFile, hashType)
 }
 
 func isSameModpack(currentManifest, newManifest structs.Manifest) bool {

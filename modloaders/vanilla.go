@@ -1,7 +1,6 @@
 package modloaders
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"ftb-server-downloader/structs"
@@ -17,17 +16,16 @@ type Vanilla struct {
 }
 
 func GetVanilla(target structs.ModpackTargets, installDir string) (Vanilla, error) {
-
-	rawMeta, err := util.DoGet(launcherMeta)
+	var meta LauncherMeta
+	rawMeta, err := util.ReqClient.R().
+		SetSuccessResult(&meta).
+		Get(launcherMeta)
 	if err != nil {
 		return Vanilla{}, err
 	}
-	defer rawMeta.Body.Close()
 
-	var meta LauncherMeta
-	err = json.NewDecoder(rawMeta.Body).Decode(&meta)
-	if err != nil {
-		return Vanilla{}, err
+	if !rawMeta.IsSuccessState() {
+		return Vanilla{}, fmt.Errorf("failed to fetch launcher meta: %s", rawMeta.Status)
 	}
 
 	return Vanilla{
@@ -38,7 +36,6 @@ func GetVanilla(target structs.ModpackTargets, installDir string) (Vanilla, erro
 }
 
 func (v Vanilla) GetDownload() ([]structs.File, error) {
-	var mlFiles []structs.File
 
 	var servDlUrl string
 	for _, version := range v.Meta.Versions {
@@ -49,21 +46,23 @@ func (v Vanilla) GetDownload() ([]structs.File, error) {
 	}
 
 	if servDlUrl == "" {
-		return mlFiles, errors.New("version not found")
+		return nil, errors.New("version not found")
 	}
-
-	rawVer, err := util.DoGet(servDlUrl)
-	if err != nil {
-		return []structs.File{}, err
-	}
-	defer rawVer.Body.Close()
 
 	var version VanillaVersion
-	err = json.NewDecoder(rawVer.Body).Decode(&version)
+	rawVer, err := util.ReqClient.R().
+		SetSuccessResult(&version).
+		Get(servDlUrl)
+
 	if err != nil {
-		return []structs.File{}, err
+		return nil, err
 	}
 
+	if !rawVer.IsSuccessState() {
+		return nil, fmt.Errorf("failed to fetch vanilla version: %s", rawVer.Status)
+	}
+
+	var mlFiles []structs.File
 	mlFiles = append(mlFiles, structs.File{
 		Name:     fmt.Sprintf("minecraft_server.%s.jar", v.Version),
 		Url:      version.Downloads.Server.URL,

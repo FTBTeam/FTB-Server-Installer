@@ -1,7 +1,6 @@
 package modloaders
 
 import (
-	"encoding/json"
 	"fmt"
 	"ftb-server-downloader/structs"
 	"ftb-server-downloader/util"
@@ -105,16 +104,17 @@ func (s Fabric) Install(useOwnJava bool) error {
 
 func getInstaller() ([]FabricInstaller, error) {
 	url := fmt.Sprintf("%s/v2/versions/installer", fabricMeta)
-	resp, err := util.DoGet(url)
-	if err != nil {
-		return []FabricInstaller{}, err
-	}
-	defer resp.Body.Close()
-	var fabricInstaller []FabricInstaller
 
-	err = json.NewDecoder(resp.Body).Decode(&fabricInstaller)
+	var fabricInstaller []FabricInstaller
+	resp, err := util.ReqClient.R().
+		SetSuccessResult(&fabricInstaller).
+		Get(url)
 	if err != nil {
-		return []FabricInstaller{}, err
+		return nil, err
+	}
+
+	if !resp.IsSuccessState() {
+		return nil, fmt.Errorf("error getting fabric installer from %s (%s)", url, resp.Status)
 	}
 
 	return fabricInstaller, nil
