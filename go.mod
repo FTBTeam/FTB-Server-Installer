@@ -1,6 +1,6 @@
 module ftb-server-downloader
 
-go 1.26.4
+go 1.26.5
 
 require (
 	github.com/codeclysm/extract/v4 v4.0.0
@@ -34,8 +34,8 @@ require (
 	github.com/refraction-networking/utls v1.8.2 // indirect
 	github.com/ulikunitz/xz v0.5.15 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
-	golang.org/x/crypto v0.51.0 // indirect
-	golang.org/x/net v0.55.0 // indirect
-	golang.org/x/sys v0.46.0 // indirect
-	golang.org/x/text v0.37.0 // indirect
+	golang.org/x/crypto v0.53.0 // indirect
+	golang.org/x/net v0.56.0 // indirect
+	golang.org/x/sys v0.47.0 // indirect
+	golang.org/x/text v0.39.0 // indirect
 )
