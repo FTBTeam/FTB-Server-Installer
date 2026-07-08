@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.47
+
+- Updated packages and go version
+  - Comes with security updates and bug fixes
+- Replace custom HTTP client wrappers with the `imroc/req/v3` library.
+
 ## 1.0.46
 
 - Feat: Support new api requirements for CurseForge downloads
