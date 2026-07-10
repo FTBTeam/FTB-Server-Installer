@@ -150,17 +150,9 @@ func (s Fabric) startScript(ownJava bool) error {
 	}
 	runJarName := "fabric-server-launch.jar"
 
-	if runtime.GOOS == "windows" {
-		_, err = runFile.WriteString(fmt.Sprintf("\"%s\" -jar %s -Xmx%dM %s nogui", javaPath, log4jFix, s.Memory.Recommended, runJarName))
-		if err != nil {
-			return err
-		}
-	}
-	if runtime.GOOS == "darwin" || runtime.GOOS == "linux" {
-		_, err = runFile.WriteString(fmt.Sprintf("#!/usr/bin/env sh\n\"%s\" -jar %s -Xmx%dM %s nogui", javaPath, log4jFix, s.Memory.Recommended, runJarName))
-		if err != nil {
-			return err
-		}
+	err = writeRunFile(runFile, javaPath, log4jFix, s.Memory.Recommended, runJarName)
+	if err != nil {
+		return err
 	}
 
 	return nil
