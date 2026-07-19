@@ -25,6 +25,7 @@ type Download struct {
 	checkContentLength bool
 	Progress           float64
 	CancelFunc         context.CancelFunc
+	Timeout            time.Duration
 }
 
 func NewDownload(destPath string, reqUrl string) (*Download, error) {
@@ -35,6 +36,7 @@ func NewDownload(destPath string, reqUrl string) (*Download, error) {
 		reqURL:             reqUrl,
 		destPath:           destPath,
 		checkContentLength: false,
+		Timeout:            DlTimeout,
 	}, nil
 }
 
@@ -42,7 +44,7 @@ func NewDownload(destPath string, reqUrl string) (*Download, error) {
 // It handles directory creation, checksum verification, and cleanup on error if configured.
 // Returns an error if the download or verification fails.
 func (dl *Download) Do() error {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), dl.Timeout)
 	dl.CancelFunc = cancel
 	defer dl.Cancel()
 

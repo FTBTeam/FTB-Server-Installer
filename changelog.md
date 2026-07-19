@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.48
+- Updated term package
+- Changed file download timeout from 30 minutes to 5 minutes
+  - This can be changed with the `-timeout` flag, example: `-timeout 30s`, `-timeout 1m`, `-timeout 5m`
+
 ## 1.0.47
 
 - Updated packages and go version
