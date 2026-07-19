@@ -69,8 +69,8 @@ func init() {
 	}
 
 	userAgentVersion := util.ReleaseVersion
-	if strings.HasPrefix(util.ReleaseVersion, "v") {
-		userAgentVersion = strings.TrimPrefix(util.ReleaseVersion, "v")
+	if after, ok := strings.CutPrefix(util.ReleaseVersion, "v"); ok {
+		userAgentVersion = after
 	}
 
 	util.UserAgent = fmt.Sprintf("ftb-server-installer/%s", userAgentVersion)
