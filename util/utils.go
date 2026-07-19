@@ -36,6 +36,7 @@ var (
 	CfApiKey       string
 	UserAgent      string
 	LogMw          io.Writer
+	DlTimeout      time.Duration
 	BackoffTimes   = []time.Duration{
 		1 * time.Second,
 		3 * time.Second,

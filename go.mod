@@ -9,7 +9,7 @@ require (
 	github.com/imroc/req/v3 v3.59.0
 	github.com/minio/selfupdate v0.6.0
 	github.com/pterm/pterm v0.12.83
-	golang.org/x/term v0.44.0
+	golang.org/x/term v0.45.0
 )
 
 require (

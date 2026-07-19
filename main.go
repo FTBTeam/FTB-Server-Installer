@@ -46,7 +46,6 @@ var (
 	skipModloader bool
 	noJava        bool
 	noColours     bool
-	dlTimeout     int
 	acceptEula    bool
 	verbose       bool
 
@@ -69,8 +68,8 @@ func init() {
 	}
 
 	userAgentVersion := util.ReleaseVersion
-	if strings.HasPrefix(util.ReleaseVersion, "v") {
-		userAgentVersion = strings.TrimPrefix(util.ReleaseVersion, "v")
+	if after, ok := strings.CutPrefix(util.ReleaseVersion, "v"); ok {
+		userAgentVersion = after
 	}
 
 	util.UserAgent = fmt.Sprintf("ftb-server-installer/%s", userAgentVersion)
@@ -91,7 +90,7 @@ func main() {
 	flag.BoolVar(&noJava, "no-java", false, "Do not install Java")
 	justFiles := flag.Bool("just-files", false, "Only download the files, do not install java or the modloader")
 	flag.BoolVar(&noColours, "no-colours", false, "Do not display console/terminal colours")
-	flag.IntVar(&dlTimeout, "timeout", 120, "File download timeout in seconds")
+	dlTimeout := flag.Duration("timeout", 5*time.Minute, "File download timeout in seconds, example: 30s, 1m, 5m (Default: 5m)")
 	flag.BoolVar(&acceptEula, "accept-eula", false, "Accept the EULA for Minecraft. By using this flag you are indicating your agreement to Minecraft's EULA (https://account.mojang.com/documents/minecraft_eula)")
 	flag.BoolVar(&verbose, "verbose", false, "Verbose output")
 	flag.Parse()
@@ -135,6 +134,13 @@ func main() {
 	pterm.DefaultCenter.Println(logo)
 	pterm.DefaultCenter.WithCenterEachLineSeparately().Printfln("Server installer version: %s(%s)\n%s", util.ReleaseVersion, util.GitCommit, time.Now().UTC().Format(time.RFC1123))
 	pterm.DefaultCenter.WithCenterEachLineSeparately().Println(pterm.Bold.Sprintf("Installer Issue tracker\nhttps://github.com/FTBTeam/FTB-Server-Installer/issues"))
+
+	// Set file download timeout
+	if *dlTimeout < 30*time.Second {
+		pterm.Warning.Println("Download timeout is too low, setting to 30 seconds")
+		*dlTimeout = 30 * time.Second
+	}
+	util.DlTimeout = *dlTimeout
 
 	// Set request client user agent
 	util.ReqClient.SetUserAgent(util.UserAgent)

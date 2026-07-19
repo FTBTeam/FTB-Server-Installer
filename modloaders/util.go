@@ -5,6 +5,7 @@ import (
 	"ftb-server-downloader/util"
 	"os"
 	"path/filepath"
+	"runtime"
 
 	semVer "github.com/hashicorp/go-version"
 	"github.com/pterm/pterm"
@@ -78,4 +79,22 @@ func Log4JFixer(installDir string, mcVersion string) (string, error) {
 	}
 
 	return "", nil
+}
+
+func writeRunFile(runFile *os.File, javaPath string, log4jFix string, recMem int, runJarName string) error {
+	var err error
+	if runtime.GOOS == "windows" {
+		_, err = runFile.WriteString(fmt.Sprintf("\"%s\" -jar %s -Xmx%dM %s nogui", javaPath, log4jFix, recMem, runJarName))
+		if err != nil {
+			return err
+		}
+	}
+	if runtime.GOOS == "darwin" || runtime.GOOS == "linux" {
+		_, err = runFile.WriteString(fmt.Sprintf("#!/usr/bin/env sh\n\"%s\" -jar %s -Xmx%dM %s nogui", javaPath, log4jFix, recMem, runJarName))
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
