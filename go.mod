@@ -4,7 +4,7 @@ go 1.26.5
 
 require (
 	github.com/codeclysm/extract/v4 v4.0.0
-	github.com/ftbteam/keystone v0.0.5
+	github.com/ftbteam/keystone v0.0.6
 	github.com/hashicorp/go-version v1.9.0
 	github.com/imroc/req/v3 v3.59.0
 	github.com/minio/selfupdate v0.6.0

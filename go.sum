@@ -25,8 +25,8 @@ github.com/containerd/console v1.0.5 h1:R0ymNeydRqH2DmakFNdmjR2k0t7UPuiOV/N/27/q
 github.com/containerd/console v1.0.5/go.mod h1:YynlIjWYF8myEu6sdkwKIvGQq+cOckRm6So2avqoYAk=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/ftbteam/keystone v0.0.5 h1:1IO/xICIA0EPbr5NAg8HMrszF8B/K8iXO0kc5uoZXtQ=
-github.com/ftbteam/keystone v0.0.5/go.mod h1:Prtg8X+pW5TWdQADymyHoAVUfhKgUQTDYSFznVjvknI=
+github.com/ftbteam/keystone v0.0.6 h1:W6UHGO3sFml/8ky5m/15jSzZPEuxq43N4OqYhkDIx/Y=
+github.com/ftbteam/keystone v0.0.6/go.mod h1:Prtg8X+pW5TWdQADymyHoAVUfhKgUQTDYSFznVjvknI=
 github.com/google/go-cmp v0.5.2/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
 github.com/google/go-cmp v0.7.0 h1:wk8382ETsv4JYUZwIsn6YpYiWiBsYLSJiTsyBybVuN8=
 github.com/google/go-cmp v0.7.0/go.mod h1:pXiqmnSA92OHEEa9HXL2W4E7lf9JzCmGVUdgjX3N/iU=
