@@ -35,6 +35,10 @@ func GetFabric(target structs.ModpackTargets, memory structs.Memory, installDir 
 		return Fabric{}, err
 	}
 
+	if fabricInstaller == nil || len(fabricInstaller) == 0 {
+		return Fabric{}, fmt.Errorf("no fabric installer found")
+	}
+
 	return Fabric{
 		InstallDir:      installDir,
 		Targets:         target,
