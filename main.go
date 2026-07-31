@@ -430,7 +430,12 @@ func main() {
 
 	if isUpdate {
 		for _, f := range removedFiles {
-			err := os.Remove(filepath.Join(installDir, f.Path, f.Name))
+			safePath, err := keystone.EnsurePathWithinRoot(filepath.Join(installDir, f.Path, f.Name), installDir)
+			if err != nil {
+				pterm.Fatal.Printfln("File path %s is outside of the install directory, failing install", filepath.Join(installDir, f.Path, f.Name))
+			}
+
+			err = os.Remove(safePath)
 			if err != nil {
 				pterm.Error.Printfln("Removing files error: %s", err.Error())
 				continue
@@ -439,7 +444,12 @@ func main() {
 
 		// For now, we remove the files that have been updated so they can be freshly downloaded.
 		for _, f := range updatedFiles {
-			err := os.Remove(filepath.Join(installDir, f.Path, f.Name))
+			safePath, err := keystone.EnsurePathWithinRoot(filepath.Join(installDir, f.Path, f.Name), installDir)
+			if err != nil {
+				pterm.Fatal.Printfln("File path %s is outside of the install directory, failing install", filepath.Join(installDir, f.Path, f.Name))
+			}
+
+			err = os.Remove(safePath)
 			if err != nil {
 				pterm.Error.Printfln("Removing update files error: %s", err.Error())
 				continue
@@ -641,13 +651,18 @@ func downloadFiles(files ...structs.File) error {
 
 func doDownload(file structs.File) error {
 	destPath := filepath.Join(installDir, file.Path, file.Name)
+	safePath, err := keystone.EnsurePathWithinRoot(destPath, installDir)
+	if err != nil {
+		return errors.New(fmt.Sprintf("file path %s is outside of the install directory, failing install", destPath))
+	}
+
 	mirrors := append([]string{file.Url}, file.Mirrors...)
 
 	for m, mirror := range mirrors {
 		for attempts := 0; attempts < 3; attempts++ {
 			pterm.Debug.Printfln("Downloading file: %s from %s | attempt: %d | Mirrors %d", file.Name, mirror, attempts+1, len(mirrors))
 
-			dl, err := util.NewDownload(destPath, mirror)
+			dl, err := util.NewDownload(safePath, mirror)
 			if err != nil {
 				pterm.Error.Printfln("Error creating download: %s", err.Error())
 				c, b, err := util.FailedDownloadHandler(attempts, m, file, mirror, mirrors)
