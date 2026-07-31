@@ -102,6 +102,9 @@ func (s Fabric) Install(useOwnJava bool) error {
 	_ = os.Remove(filepath.Join(s.InstallDir, installerName))
 
 	err = s.startScript(useOwnJava)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
