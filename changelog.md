@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.49
+- Updated packages
+- Fixed missing error/length checks on Adoptium and Fabric api response
+- Fixed log4j flag being in the wrong place
+- Fixed possible path traversal on file downloads
+
 ## 1.0.48
 - Updated term package
 - Changed file download timeout from 30 minutes to 5 minutes
