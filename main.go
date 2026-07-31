@@ -606,7 +606,6 @@ func getModLoader(targets structs.ModpackTargets, memory structs.Memory) (modloa
 
 func downloadFiles(files ...structs.File) error {
 	var wg sync.WaitGroup
-	var mu sync.Mutex
 	// Use atomic to keep track of the progress bar
 	var pCount atomic.Uint64
 	threadLimit := make(chan struct{}, threads)
@@ -622,9 +621,7 @@ func downloadFiles(files ...structs.File) error {
 				<-threadLimit
 				count := pCount.Add(1)
 				if count%5 == 0 || count == uint64(len(files)) {
-					mu.Lock()
 					p.Current = int(count)
-					mu.Unlock()
 				}
 				wg.Done()
 			}()
