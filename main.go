@@ -586,7 +586,7 @@ func getProvider() (repos.ModpackRepo, error) {
 	// case "curseforge":
 	//	return repos.GetCurseForge(packId, versionId), nil
 	default:
-		return nil, errors.New(fmt.Sprintf("'%s' not recognised", provider))
+		return nil, fmt.Errorf("'%s' not recognised", provider)
 	}
 }
 
@@ -600,7 +600,7 @@ func getModLoader(targets structs.ModpackTargets, memory structs.Memory) (modloa
 	case "forge":
 		return modloaders.GetForge(targets, memory, installDir), nil
 	default:
-		return nil, errors.New(fmt.Sprintf("'%s' not recognised", targets.ModLoader.Name))
+		return nil, fmt.Errorf("'%s' not recognised", targets.ModLoader.Name)
 	}
 }
 
@@ -663,7 +663,7 @@ func doDownload(file structs.File) error {
 	destPath := filepath.Join(installDir, file.Path, file.Name)
 	safePath, err := keystone.EnsurePathWithinRoot(destPath, installDir)
 	if err != nil {
-		return errors.New(fmt.Sprintf("file path %s is outside of the install directory, failing install", destPath))
+		return fmt.Errorf("file path %s is outside of the install directory, failing install", destPath)
 	}
 
 	mirrors := append([]string{file.Url}, file.Mirrors...)
@@ -685,7 +685,7 @@ func doDownload(file structs.File) error {
 				}
 			}
 			if dl == nil {
-				return errors.New(fmt.Sprintf("download object is nil for file %s", file.Name))
+				return fmt.Errorf("download object is nil for file %s", file.Name)
 			}
 			if file.Hash != "" {
 				hexHash, _ := hex.DecodeString(file.Hash)
@@ -769,7 +769,7 @@ func runValidation(manifest structs.Manifest) error {
 func processValidationFiles(f structs.File) (string, error) {
 	safePath, err := keystone.EnsurePathWithinRoot(filepath.Join(installDir, f.Path, f.Name), installDir)
 	if err != nil {
-		return "", errors.New(fmt.Sprintf("file path %s is outside of the install directory, failing install", filepath.Join(installDir, f.Path, f.Name)))
+		return "", fmt.Errorf("file path %s is outside of the install directory, failing install", filepath.Join(installDir, f.Path, f.Name))
 	}
 	packFile, err := os.Open(safePath)
 	if err != nil {
