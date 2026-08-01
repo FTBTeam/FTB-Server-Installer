@@ -143,7 +143,7 @@ func (s Fabric) startScript(ownJava bool) error {
 		pterm.Warning.Printfln("Failed to apply log4j fix: %s", err.Error())
 	}
 
-	runFile, err := os.OpenFile(runScriptPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
+	runFile, err := os.OpenFile(runScriptPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 	if err != nil {
 		return err
 	}

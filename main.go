@@ -107,7 +107,7 @@ func main() {
 	}
 
 	var err error
-	logFile, err = os.OpenFile("ftb-server-installer.log", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
+	logFile, err = os.OpenFile("ftb-server-installer.log", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 	if err != nil {
 		panic(err)
 	}
@@ -418,7 +418,7 @@ func main() {
 	}
 
 	if mkdir {
-		err = os.MkdirAll(installDir, 0777)
+		err = os.MkdirAll(installDir, 0755)
 		if err != nil {
 			selectedProvider.FailedInstall()
 			pterm.Fatal.Println("Unable to create install directory:", err.Error())
