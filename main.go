@@ -669,7 +669,7 @@ func doDownload(file structs.File) error {
 	mirrors := append([]string{file.Url}, file.Mirrors...)
 
 	for m, mirror := range mirrors {
-		for attempts := 0; attempts < 3; attempts++ {
+		for attempts := range 3 {
 			pterm.Debug.Printfln("Downloading file: %s from %s | attempt: %d | Mirrors %d", file.Name, mirror, attempts+1, len(mirrors))
 
 			dl, err := util.NewDownload(safePath, mirror)
@@ -767,7 +767,11 @@ func runValidation(manifest structs.Manifest) error {
 }
 
 func processValidationFiles(f structs.File) (string, error) {
-	packFile, err := os.Open(filepath.Join(installDir, f.Path, f.Name))
+	safePath, err := keystone.EnsurePathWithinRoot(filepath.Join(installDir, f.Path, f.Name), installDir)
+	if err != nil {
+		return "", errors.New(fmt.Sprintf("file path %s is outside of the install directory, failing install", filepath.Join(installDir, f.Path, f.Name)))
+	}
+	packFile, err := os.Open(safePath)
 	if err != nil {
 		return "", err
 	}
