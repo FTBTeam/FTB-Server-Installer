@@ -612,6 +612,21 @@ func downloadFiles(files ...structs.File) error {
 
 	p, _ := pterm.DefaultProgressbar.WithTitle("Downloading...").WithTotal(len(files)).Start()
 
+	progressDone := make(chan struct{})
+	go func() {
+		ticker := time.NewTicker(200 * time.Millisecond)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ticker.C:
+				p.Current = int(pCount.Load())
+			case <-progressDone:
+				p.Current = int(pCount.Load())
+				return
+			}
+		}
+	}()
+
 	for _, file := range files {
 		wg.Add(1)
 		threadLimit <- struct{}{}
@@ -619,10 +634,7 @@ func downloadFiles(files ...structs.File) error {
 		go func(f structs.File) {
 			defer func() {
 				<-threadLimit
-				count := pCount.Add(1)
-				if count%5 == 0 || count == uint64(len(files)) {
-					p.Current = int(count)
-				}
+				pCount.Add(1)
 				wg.Done()
 			}()
 			err := doDownload(f)
@@ -635,6 +647,7 @@ func downloadFiles(files ...structs.File) error {
 	}
 	// Wait for all downloads to finish
 	wg.Wait()
+	close(progressDone)
 
 	// Update the progress bar to show that the downloads are complete
 	p.Current = int(pCount.Load())
