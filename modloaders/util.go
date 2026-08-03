@@ -18,7 +18,7 @@ func Log4JFixer(installDir string, mcVersion string) (string, error) {
 		return "", err
 	}
 	if mcSemVer.GreaterThanOrEqual(semVer.Must(semVer.NewVersion("1.18.1"))) {
-		return "-Dlog4j2.formatMsgNoLookups=true", err
+		return " -Dlog4j2.formatMsgNoLookups=true ", err
 	}
 	exists, err := util.PathExists(patchesPath)
 	if err != nil {
@@ -50,7 +50,7 @@ func Log4JFixer(installDir string, mcVersion string) (string, error) {
 			return "", fmt.Errorf("failed to download log4j fix: %s", resp.Status)
 		}
 
-		return fmt.Sprintf("-Dlog4j.configurationFile=%s", filepath.Join(patchesPath, "log4j2_17-111.xml")), nil
+		return fmt.Sprintf(" -Dlog4j.configurationFile=%s ", filepath.Join(patchesPath, "log4j2_17-111.xml")), nil
 
 	}
 
@@ -71,11 +71,11 @@ func Log4JFixer(installDir string, mcVersion string) (string, error) {
 			_ = os.Remove(log4jPath)
 			return "", fmt.Errorf("failed to download log4j fix: %s", resp.Status)
 		}
-		return fmt.Sprintf("-Dlog4j.configurationFile=%s", filepath.Join(patchesPath, "log4j2_112-116.xml")), nil
+		return fmt.Sprintf(" -Dlog4j.configurationFile=%s ", filepath.Join(patchesPath, "log4j2_112-116.xml")), nil
 	}
 
 	if mcSemVer.GreaterThanOrEqual(semVer.Must(semVer.NewVersion("1.17"))) && mcSemVer.LessThanOrEqual(semVer.Must(semVer.NewVersion("1.18"))) {
-		return "-Dlog4j2.formatMsgNoLookups=true", nil
+		return " -Dlog4j2.formatMsgNoLookups=true ", nil
 	}
 
 	return "", nil
@@ -84,13 +84,13 @@ func Log4JFixer(installDir string, mcVersion string) (string, error) {
 func writeRunFile(runFile *os.File, javaPath string, log4jFix string, recMem int, runJarName string) error {
 	var err error
 	if runtime.GOOS == "windows" {
-		_, err = runFile.WriteString(fmt.Sprintf("\"%s\" -jar %s -Xmx%dM %s nogui", javaPath, log4jFix, recMem, runJarName))
+		_, err = runFile.WriteString(fmt.Sprintf("\"%s\"%s-Xmx%dM -jar %s nogui", javaPath, log4jFix, recMem, runJarName))
 		if err != nil {
 			return err
 		}
 	}
 	if runtime.GOOS == "darwin" || runtime.GOOS == "linux" {
-		_, err = runFile.WriteString(fmt.Sprintf("#!/usr/bin/env sh\n\"%s\" -jar %s -Xmx%dM %s nogui", javaPath, log4jFix, recMem, runJarName))
+		_, err = runFile.WriteString(fmt.Sprintf("#!/usr/bin/env sh\n\"%s\"%s-Xmx%dM -jar %s nogui", javaPath, log4jFix, recMem, runJarName))
 		if err != nil {
 			return err
 		}

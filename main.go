@@ -107,7 +107,7 @@ func main() {
 	}
 
 	var err error
-	logFile, err = os.OpenFile("ftb-server-installer.log", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
+	logFile, err = os.OpenFile("ftb-server-installer.log", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 	if err != nil {
 		panic(err)
 	}
@@ -418,7 +418,7 @@ func main() {
 	}
 
 	if mkdir {
-		err = os.MkdirAll(installDir, 0777)
+		err = os.MkdirAll(installDir, 0755)
 		if err != nil {
 			selectedProvider.FailedInstall()
 			pterm.Fatal.Println("Unable to create install directory:", err.Error())
@@ -430,7 +430,12 @@ func main() {
 
 	if isUpdate {
 		for _, f := range removedFiles {
-			err := os.Remove(filepath.Join(installDir, f.Path, f.Name))
+			safePath, err := keystone.EnsurePathWithinRoot(filepath.Join(installDir, f.Path, f.Name), installDir)
+			if err != nil {
+				pterm.Fatal.Printfln("File path %s is outside of the install directory, failing install", filepath.Join(installDir, f.Path, f.Name))
+			}
+
+			err = os.Remove(safePath)
 			if err != nil {
 				pterm.Error.Printfln("Removing files error: %s", err.Error())
 				continue
@@ -439,7 +444,12 @@ func main() {
 
 		// For now, we remove the files that have been updated so they can be freshly downloaded.
 		for _, f := range updatedFiles {
-			err := os.Remove(filepath.Join(installDir, f.Path, f.Name))
+			safePath, err := keystone.EnsurePathWithinRoot(filepath.Join(installDir, f.Path, f.Name), installDir)
+			if err != nil {
+				pterm.Fatal.Printfln("File path %s is outside of the install directory, failing install", filepath.Join(installDir, f.Path, f.Name))
+			}
+
+			err = os.Remove(safePath)
 			if err != nil {
 				pterm.Error.Printfln("Removing update files error: %s", err.Error())
 				continue
@@ -576,7 +586,7 @@ func getProvider() (repos.ModpackRepo, error) {
 	// case "curseforge":
 	//	return repos.GetCurseForge(packId, versionId), nil
 	default:
-		return nil, errors.New(fmt.Sprintf("'%s' not recognised", provider))
+		return nil, fmt.Errorf("'%s' not recognised", provider)
 	}
 }
 
@@ -590,18 +600,32 @@ func getModLoader(targets structs.ModpackTargets, memory structs.Memory) (modloa
 	case "forge":
 		return modloaders.GetForge(targets, memory, installDir), nil
 	default:
-		return nil, errors.New(fmt.Sprintf("'%s' not recognised", targets.ModLoader.Name))
+		return nil, fmt.Errorf("'%s' not recognised", targets.ModLoader.Name)
 	}
 }
 
 func downloadFiles(files ...structs.File) error {
 	var wg sync.WaitGroup
-	var mu sync.Mutex
 	// Use atomic to keep track of the progress bar
 	var pCount atomic.Uint64
 	threadLimit := make(chan struct{}, threads)
 
 	p, _ := pterm.DefaultProgressbar.WithTitle("Downloading...").WithTotal(len(files)).Start()
+
+	progressDone := make(chan struct{})
+	go func() {
+		ticker := time.NewTicker(200 * time.Millisecond)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ticker.C:
+				p.Current = int(pCount.Load())
+			case <-progressDone:
+				p.Current = int(pCount.Load())
+				return
+			}
+		}
+	}()
 
 	for _, file := range files {
 		wg.Add(1)
@@ -610,12 +634,7 @@ func downloadFiles(files ...structs.File) error {
 		go func(f structs.File) {
 			defer func() {
 				<-threadLimit
-				count := pCount.Add(1)
-				if count%5 == 0 || count == uint64(len(files)) {
-					mu.Lock()
-					p.Current = int(count)
-					mu.Unlock()
-				}
+				pCount.Add(1)
 				wg.Done()
 			}()
 			err := doDownload(f)
@@ -628,6 +647,7 @@ func downloadFiles(files ...structs.File) error {
 	}
 	// Wait for all downloads to finish
 	wg.Wait()
+	close(progressDone)
 
 	// Update the progress bar to show that the downloads are complete
 	p.Current = int(pCount.Load())
@@ -641,13 +661,18 @@ func downloadFiles(files ...structs.File) error {
 
 func doDownload(file structs.File) error {
 	destPath := filepath.Join(installDir, file.Path, file.Name)
+	safePath, err := keystone.EnsurePathWithinRoot(destPath, installDir)
+	if err != nil {
+		return fmt.Errorf("file path %s is outside of the install directory, failing install", destPath)
+	}
+
 	mirrors := append([]string{file.Url}, file.Mirrors...)
 
 	for m, mirror := range mirrors {
-		for attempts := 0; attempts < 3; attempts++ {
+		for attempts := range 3 {
 			pterm.Debug.Printfln("Downloading file: %s from %s | attempt: %d | Mirrors %d", file.Name, mirror, attempts+1, len(mirrors))
 
-			dl, err := util.NewDownload(destPath, mirror)
+			dl, err := util.NewDownload(safePath, mirror)
 			if err != nil {
 				pterm.Error.Printfln("Error creating download: %s", err.Error())
 				c, b, err := util.FailedDownloadHandler(attempts, m, file, mirror, mirrors)
@@ -660,7 +685,7 @@ func doDownload(file structs.File) error {
 				}
 			}
 			if dl == nil {
-				return errors.New(fmt.Sprintf("download object is nil for file %s", file.Name))
+				return fmt.Errorf("download object is nil for file %s", file.Name)
 			}
 			if file.Hash != "" {
 				hexHash, _ := hex.DecodeString(file.Hash)
@@ -742,7 +767,11 @@ func runValidation(manifest structs.Manifest) error {
 }
 
 func processValidationFiles(f structs.File) (string, error) {
-	packFile, err := os.Open(filepath.Join(installDir, f.Path, f.Name))
+	safePath, err := keystone.EnsurePathWithinRoot(filepath.Join(installDir, f.Path, f.Name), installDir)
+	if err != nil {
+		return "", fmt.Errorf("file path %s is outside of the install directory, failing install", filepath.Join(installDir, f.Path, f.Name))
+	}
+	packFile, err := os.Open(safePath)
 	if err != nil {
 		return "", err
 	}

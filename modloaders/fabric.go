@@ -35,6 +35,10 @@ func GetFabric(target structs.ModpackTargets, memory structs.Memory, installDir 
 		return Fabric{}, err
 	}
 
+	if fabricInstaller == nil || len(fabricInstaller) == 0 {
+		return Fabric{}, fmt.Errorf("no fabric installer found")
+	}
+
 	return Fabric{
 		InstallDir:      installDir,
 		Targets:         target,
@@ -98,6 +102,9 @@ func (s Fabric) Install(useOwnJava bool) error {
 	_ = os.Remove(filepath.Join(s.InstallDir, installerName))
 
 	err = s.startScript(useOwnJava)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -136,7 +143,7 @@ func (s Fabric) startScript(ownJava bool) error {
 		pterm.Warning.Printfln("Failed to apply log4j fix: %s", err.Error())
 	}
 
-	runFile, err := os.OpenFile(runScriptPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
+	runFile, err := os.OpenFile(runScriptPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 	if err != nil {
 		return err
 	}

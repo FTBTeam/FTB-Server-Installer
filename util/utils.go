@@ -188,6 +188,10 @@ func GetJava(version string) (structs.File, error) {
 		return structs.File{}, fmt.Errorf("failed to get java from adoptium: %s (%d)\n%s", resp.Status, resp.StatusCode, resp.String())
 	}
 
+	if len(adoptium) == 0 || len(adoptium[0].Binaries) == 0 {
+		return structs.File{}, errors.New("no java found in adoptium response")
+	}
+
 	var fileExt string
 	if strings.HasSuffix(adoptium[0].Binaries[0].Package.Name, ".zip") {
 		fileExt = ".zip"
