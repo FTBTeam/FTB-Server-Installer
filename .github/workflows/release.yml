@@ -173,7 +173,7 @@ jobs:
           cd release/
           echo "Running job for modpack ID: ${{ matrix.packs.pack_id }}"
           chmod +x ./ftb-server-linux-amd64
-          ./ftb-server-linux-amd64 -pack ${{ matrix.packs.pack_id }} -latest -auto -force -skip-modloader -verbose
+          ./ftb-server-linux-amd64 -pack ${{ matrix.packs.pack_id }} -latest -auto -force -skip-modloader -no-java -verbose
 
   release:
     needs:
