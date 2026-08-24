@@ -157,6 +157,14 @@ func main() {
 		pterm.Debug.Println("Verbose output enabled")
 	}
 
+	versionInfo, err := util.CheckForUpdate()
+	if err != nil {
+		pterm.Warning.Printfln("Error checking for installer update: %v", err)
+	}
+	if versionInfo.UpdateAvailable {
+		pterm.Warning.Printfln("A new version of the installer is available: %s,\nDownload it from: https://github.com/FTBTeam/FTB-Server-Installer/releases", strings.TrimPrefix(versionInfo.LatestVersion, "v"))
+	}
+
 	abs, err := filepath.Abs(installDir)
 	if err != nil {
 		pterm.Fatal.Println("Error getting absolute path:", err.Error())
