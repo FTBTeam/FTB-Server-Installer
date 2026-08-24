@@ -7,13 +7,11 @@ require (
 	github.com/ftbteam/keystone v0.0.7
 	github.com/hashicorp/go-version v1.9.0
 	github.com/imroc/req/v3 v3.61.0
-	github.com/minio/selfupdate v0.6.0
 	github.com/pterm/pterm v0.12.83
 	golang.org/x/term v0.45.0
 )
 
 require (
-	aead.dev/minisign v0.3.0 // indirect
 	atomicgo.dev/cursor v0.2.0 // indirect
 	atomicgo.dev/keyboard v0.2.10 // indirect
 	atomicgo.dev/schedule v0.1.0 // indirect
