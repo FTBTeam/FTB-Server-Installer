@@ -2,7 +2,7 @@ package util
 
 import (
 	"archive/zip"
-	"encoding/json"
+	"encoding/json/v2"
 	"errors"
 	"fmt"
 	"ftb-server-downloader/structs"
@@ -132,7 +132,7 @@ func ReadManifest(installDir string) (structs.Manifest, error) {
 
 // WriteManifest handy function to write the version manifest
 func WriteManifest(installDir string, manifest structs.Manifest) error {
-	manifestJson, err := json.MarshalIndent(manifest, "", "  ")
+	manifestJson, err := json.Marshal(manifest)
 	if err != nil {
 		return fmt.Errorf("unable to marshal manifest: %s", err.Error())
 	}
@@ -142,6 +142,8 @@ func WriteManifest(installDir string, manifest structs.Manifest) error {
 		return fmt.Errorf("unable to create manifest: %s", err.Error())
 	}
 	defer vFile.Close()
+	//formattedManifestJson := jsontext.Value(manifestJson)
+	//_ = formattedManifestJson.Indent()
 	_, err = vFile.Write(manifestJson)
 	if err != nil {
 		return fmt.Errorf("unable to write manifest: %s", err.Error())

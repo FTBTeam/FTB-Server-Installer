@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.50
+- Updated packages and golang version
+  - Uses go 1.27 and encoding/json package v2
+- Removed self update feature
+
 ## 1.0.49
 - Updated packages
 - Fixed missing error/length checks on Adoptium and Fabric api response
