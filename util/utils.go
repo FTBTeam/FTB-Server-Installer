@@ -8,7 +8,6 @@ import (
 	"ftb-server-downloader/structs"
 	"io"
 	"io/fs"
-	"net/http"
 	"net/url"
 	"os"
 	"os/exec"
@@ -527,24 +526,18 @@ func CheckForUpdate() (VersionInfo, error) {
 		isPreReleaseOrDraft: false,
 	}
 	releaseApi := fmt.Sprintf("https://api.github.com/repos/%s/%s/releases/latest", org, repo)
-	resp, err := http.Get(releaseApi)
+
+	var release GHRelease
+	resp, err := ReqClient.R().
+		SetSuccessResult(&release).
+		Get(releaseApi)
+
 	if err != nil {
 		return versionInfo, fmt.Errorf("error checking for update: %s", err.Error())
 	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
+
+	if !resp.IsSuccessState() {
 		return versionInfo, fmt.Errorf("bad status: %s", resp.Status)
-	}
-
-	data, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return versionInfo, fmt.Errorf("error reading response body: %s", err.Error())
-	}
-
-	var release GHRelease
-	err = json.Unmarshal(data, &release)
-	if err != nil {
-		return versionInfo, fmt.Errorf("error unmarshalling response: %s", err.Error())
 	}
 
 	if release.Prerelease || release.Draft {

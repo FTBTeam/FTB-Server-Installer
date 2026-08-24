@@ -163,6 +163,7 @@ func main() {
 	}
 	if versionInfo.UpdateAvailable {
 		pterm.Warning.Printfln("A new version of the installer is available: %s,\nDownload it from: https://github.com/FTBTeam/FTB-Server-Installer/releases", strings.TrimPrefix(versionInfo.LatestVersion, "v"))
+		pterm.Println()
 	}
 
 	abs, err := filepath.Abs(installDir)
