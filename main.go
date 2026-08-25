@@ -18,6 +18,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -443,13 +444,7 @@ func main() {
 		}
 
 		// Remove unchanged files from filesToDownload, we don't want to re-download unchanged files
-		for _, f := range unchangedFiles {
-			for i, v := range filesToDownload {
-				if v.Name == f.Name && v.Path == f.Path {
-					filesToDownload = append(filesToDownload[:i], filesToDownload[i+1:]...)
-				}
-			}
-		}
+		filesToDownload = removeUnchangedFiles(filesToDownload, unchangedFiles)
 	}
 
 	// download the modpack files
@@ -846,14 +841,11 @@ func computeUpdatedFiles(currentFiles, newFiles []structs.File) (updatedFiles, r
 
 func removeUnchangedFiles(files []structs.File, unchangedFiles []structs.File) []structs.File {
 	// removed unchanged files from files
-	for _, f := range unchangedFiles {
-		for i, v := range files {
-			if v.Name == f.Name && v.Path == f.Path {
-				files = append(files[:i], files[i+1:]...)
-			}
-		}
-	}
-	return files
+	return slices.DeleteFunc(files, func(dFile structs.File) bool {
+		return slices.ContainsFunc(unchangedFiles, func(file structs.File) bool {
+			return dFile.Name == file.Name && dFile.Path == file.Path
+		})
+	})
 }
 
 func getLatestRelease(versions []structs.ModpackV, latest bool) (structs.ModpackV, error) {
