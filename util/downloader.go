@@ -3,7 +3,6 @@ package util
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"hash"
 	"io"
@@ -17,7 +16,8 @@ import (
 )
 
 type Download struct {
-	destPath           string
+	rootPath           *os.Root
+	relPath            string
 	reqURL             string
 	hash               hash.Hash
 	checksum           []byte
@@ -28,13 +28,14 @@ type Download struct {
 	Timeout            time.Duration
 }
 
-func NewDownload(destPath string, reqUrl string) (*Download, error) {
+func NewDownload(rootPath *os.Root, relPath string, reqUrl string) (*Download, error) {
 	if reqUrl == "" {
 		return nil, fmt.Errorf("required URL is empty")
 	}
 	return &Download{
 		reqURL:             reqUrl,
-		destPath:           destPath,
+		rootPath:           rootPath,
+		relPath:            relPath,
 		checkContentLength: false,
 		Timeout:            DlTimeout,
 	}, nil
@@ -86,15 +87,12 @@ func (dl *Download) Do() error {
 
 func (dl *Download) write(b io.ReadCloser) error {
 	// Check if the destination directory exists
-	destDir := filepath.Dir(dl.destPath)
-	if _, err := os.Stat(destDir); errors.Is(err, os.ErrNotExist) {
-		// Create the destination directory if it doesn't exist
-		if err := os.MkdirAll(destDir, 0755); err != nil {
-			return fmt.Errorf("failed to create directory: %s", err.Error())
-		}
+	destDir := filepath.Dir(dl.relPath)
+	if err := dl.rootPath.MkdirAll(destDir, 0755); err != nil {
+		return fmt.Errorf("failed to create directory: %s", err.Error())
 	}
 
-	f, err := os.OpenFile(dl.destPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+	f, err := dl.rootPath.OpenFile(dl.relPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		return err
 	}
@@ -114,7 +112,7 @@ func (dl *Download) write(b io.ReadCloser) error {
 		sum := dl.hash.Sum(nil)
 		if !bytes.Equal(dl.checksum, sum) {
 			if dl.deleteOnError {
-				if err := os.Remove(dl.destPath); err != nil {
+				if err := dl.rootPath.Remove(dl.relPath); err != nil {
 					return fmt.Errorf("checksum mismatch, failed to remove file: %s", err.Error())
 				}
 			}
