@@ -2,7 +2,6 @@ package repos
 
 import (
 	"cmp"
-	"errors"
 	"fmt"
 	"ftb-server-downloader/structs"
 	"ftb-server-downloader/util"
@@ -44,11 +43,10 @@ func (m *FTB) GetModpack() (structs.Modpack, error) {
 	}
 
 	if !resp.IsSuccessState() {
-		errMsg := fmt.Sprintf("unsuccessful response: %s", resp.Status)
 		if ftbModpackErr.Message != "" {
-			errMsg = fmt.Sprintf("%s, %s", errMsg, ftbModpackErr.Message)
+			return structs.Modpack{}, fmt.Errorf("unsuccessful response: %s, %s", resp.Status, ftbModpackErr.Message)
 		}
-		return structs.Modpack{}, errors.New(errMsg)
+		return structs.Modpack{}, fmt.Errorf("unsuccessful response: %s", resp.Status)
 	}
 
 	m.IsPrivate = ftbModpack.Private
@@ -86,12 +84,11 @@ func (m *FTB) GetVersion() (structs.ModpackVersion, error) {
 		return structs.ModpackVersion{}, err
 	}
 	if !resp.IsSuccessState() {
-		errMsg := fmt.Sprintf("unsuccessful response: %s", resp.Status)
 		if ftbModpackErr.Message != "" {
-			errMsg = fmt.Sprintf("%s, %s", errMsg, ftbModpackErr.Message)
+			return structs.ModpackVersion{}, fmt.Errorf("unsuccessful response: %s, %s", resp.Status, ftbModpackErr.Message)
 		}
 
-		return structs.ModpackVersion{}, errors.New(errMsg)
+		return structs.ModpackVersion{}, fmt.Errorf("unsuccessful response: %s", resp.Status)
 	}
 
 	var mem structs.Memory

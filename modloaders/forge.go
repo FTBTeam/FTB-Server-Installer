@@ -102,9 +102,10 @@ func (s Forge) Install(useOwnJava bool) error {
 			return fmt.Errorf("error running forge installer: %s", err.Error())
 		}
 		if err = cmd.Wait(); err != nil {
-			if err, ok := err.(*exec.ExitError); ok {
-				if err.ExitCode() != 0 {
-					return fmt.Errorf("forge installer failed with exit code %d, error: %s", err.ExitCode(), err.Error())
+			var exitErr *exec.ExitError
+			if errors.As(err, &exitErr) {
+				if exitErr.ExitCode() != 0 {
+					return fmt.Errorf("forge installer failed with exit code %d, error: %s", exitErr.ExitCode(), exitErr.Error())
 				}
 			} else {
 				return fmt.Errorf("error waiting for command: %s", err.Error())

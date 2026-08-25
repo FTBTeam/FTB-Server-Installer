@@ -1,6 +1,7 @@
 package modloaders
 
 import (
+	"errors"
 	"fmt"
 	"ftb-server-downloader/structs"
 	"ftb-server-downloader/util"
@@ -35,7 +36,7 @@ func GetFabric(target structs.ModpackTargets, memory structs.Memory, installDir 
 		return Fabric{}, err
 	}
 
-	if fabricInstaller == nil || len(fabricInstaller) == 0 {
+	if len(fabricInstaller) == 0 {
 		return Fabric{}, fmt.Errorf("no fabric installer found")
 	}
 
@@ -90,9 +91,10 @@ func (s Fabric) Install(useOwnJava bool) error {
 		return fmt.Errorf("error running fabric installer: %s", err.Error())
 	}
 	if err = cmd.Wait(); err != nil {
-		if err, ok := err.(*exec.ExitError); ok {
-			if err.ExitCode() != 0 {
-				return fmt.Errorf("fabric installer failed with exit code %d", err.ExitCode())
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) {
+			if exitErr.ExitCode() != 0 {
+				return fmt.Errorf("fabric installer failed with exit code %d, error: %s", exitErr.ExitCode(), exitErr.Error())
 			}
 		} else {
 			return fmt.Errorf("error waiting for command: %s", err.Error())
