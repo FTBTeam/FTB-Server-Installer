@@ -1,11 +1,12 @@
 package repos
 
 import (
+	"cmp"
 	"errors"
 	"fmt"
 	"ftb-server-downloader/structs"
 	"ftb-server-downloader/util"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/pterm/pterm"
@@ -60,8 +61,8 @@ func (m *FTB) GetModpack() (structs.Modpack, error) {
 		versionList = append(versionList, ver)
 	}
 
-	sort.Slice(versionList, func(i, j int) bool {
-		return versionList[i].Id > versionList[j].Id
+	slices.SortFunc(versionList, func(a, b structs.ModpackV) int {
+		return cmp.Compare(b.Id, a.Id)
 	})
 
 	return structs.Modpack{
