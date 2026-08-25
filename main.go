@@ -460,7 +460,7 @@ func main() {
 	// If we downloaded java, extract the files to a jre folder
 	if !noJava && !jreAlreadyExists {
 
-		javaFile, err := os.Open(filepath.Join(installDir, java.Name))
+		javaFile, err := installRoot.Open(java.Name)
 		if err != nil {
 			selectedProvider.FailedInstall()
 			pterm.Fatal.Println("Error opening java archive", err.Error())
@@ -482,7 +482,7 @@ func main() {
 			join := strings.Join(parts, string(sep))
 			return join
 		}
-		err = extract.Archive(context.TODO(), javaPkg, filepath.Join(installDir, "jre", modpackVersion.Targets.JavaVersion), shift)
+		err = extract.Archive(context.Background(), javaPkg, filepath.Join(installDir, "jre", modpackVersion.Targets.JavaVersion), shift)
 		if err != nil {
 			selectedProvider.FailedInstall()
 			pterm.Fatal.Println("Error extracting java archive:", err.Error())
@@ -544,8 +544,7 @@ func main() {
 	selectedProvider.SuccessfulInstall()
 	if acceptEula {
 		// set eula=true in the eula.txt file
-		eulaFile := filepath.Join(installDir, "eula.txt")
-		err = os.WriteFile(eulaFile, []byte("#By changing the setting below to TRUE you are indicating your agreement to our EULA (https://account.mojang.com/documents/minecraft_eula).\neula=true\n"), 0644)
+		err = installRoot.WriteFile("eula.txt", []byte("#By changing the setting below to TRUE you are indicating your agreement to our EULA (https://account.mojang.com/documents/minecraft_eula).\neula=true\n"), 0644)
 		if err != nil {
 			pterm.Error.Println("Error writing eula.txt file:", err.Error())
 		}
