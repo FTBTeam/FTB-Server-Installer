@@ -49,7 +49,8 @@ var (
 	acceptEula    bool
 	verbose       bool
 
-	logFile *os.File
+	logFile     *os.File
+	installRoot *os.Root
 )
 
 func init() {
@@ -412,14 +413,20 @@ func main() {
 		os.Exit(1)
 	}
 
+	installRoot, err = os.OpenRoot(installDir)
+	if err != nil {
+		pterm.Fatal.Println("Error opening install directory:", err.Error())
+		return
+	}
+	if installRoot == nil {
+		pterm.Fatal.Println("Error opening install directory: installRoot is nil")
+		return
+	}
+	defer installRoot.Close()
+
 	if isUpdate {
 		for _, f := range removedFiles {
-			safePath, err := keystone.EnsurePathWithinRoot(filepath.Join(installDir, f.Path, f.Name), installDir)
-			if err != nil {
-				pterm.Fatal.Printfln("File path %s is outside of the install directory, failing install", filepath.Join(installDir, f.Path, f.Name))
-			}
-
-			err = os.Remove(safePath)
+			err = installRoot.Remove(filepath.Join(f.Path, f.Name))
 			if err != nil {
 				pterm.Error.Printfln("Removing files error: %s", err.Error())
 				continue
@@ -428,12 +435,7 @@ func main() {
 
 		// For now, we remove the files that have been updated so they can be freshly downloaded.
 		for _, f := range updatedFiles {
-			safePath, err := keystone.EnsurePathWithinRoot(filepath.Join(installDir, f.Path, f.Name), installDir)
-			if err != nil {
-				pterm.Fatal.Printfln("File path %s is outside of the install directory, failing install", filepath.Join(installDir, f.Path, f.Name))
-			}
-
-			err = os.Remove(safePath)
+			err = installRoot.Remove(filepath.Join(f.Path, f.Name))
 			if err != nil {
 				pterm.Error.Printfln("Removing update files error: %s", err.Error())
 				continue
@@ -644,11 +646,7 @@ func downloadFiles(files ...structs.File) error {
 }
 
 func doDownload(file structs.File) error {
-	destPath := filepath.Join(installDir, file.Path, file.Name)
-	safePath, err := keystone.EnsurePathWithinRoot(destPath, installDir)
-	if err != nil {
-		return fmt.Errorf("file path %s is outside of the install directory, failing install", destPath)
-	}
+	relPath := filepath.Join(file.Path, file.Name)
 
 	mirrors := append([]string{file.Url}, file.Mirrors...)
 
@@ -656,7 +654,7 @@ func doDownload(file structs.File) error {
 		for attempts := range 3 {
 			pterm.Debug.Printfln("Downloading file: %s from %s | attempt: %d | Mirrors %d", file.Name, mirror, attempts+1, len(mirrors))
 
-			dl, err := util.NewDownload(safePath, mirror)
+			dl, err := util.NewDownload(installRoot, relPath, mirror)
 			if err != nil {
 				pterm.Error.Printfln("Error creating download: %s", err.Error())
 				c, b, err := util.FailedDownloadHandler(attempts, m, file, mirror, mirrors)
@@ -751,11 +749,7 @@ func runValidation(manifest structs.Manifest) error {
 }
 
 func processValidationFiles(f structs.File) (string, error) {
-	safePath, err := keystone.EnsurePathWithinRoot(filepath.Join(installDir, f.Path, f.Name), installDir)
-	if err != nil {
-		return "", fmt.Errorf("file path %s is outside of the install directory, failing install", filepath.Join(installDir, f.Path, f.Name))
-	}
-	packFile, err := os.Open(safePath)
+	packFile, err := installRoot.Open(filepath.Join(f.Path, f.Name))
 	if err != nil {
 		return "", err
 	}

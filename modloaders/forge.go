@@ -2,6 +2,7 @@ package modloaders
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"ftb-server-downloader/structs"
 	"ftb-server-downloader/util"
@@ -134,8 +135,18 @@ func (s Forge) Install(useOwnJava bool) error {
 		if err != nil {
 			return err
 		}
-		dest := filepath.Join(s.InstallDir, vanillaDl[0].Path, vanillaDl[0].Name)
-		fDl, err := util.NewDownload(dest, vanillaDl[0].Url)
+
+		installRoot, err := os.OpenRoot(s.InstallDir)
+		if err != nil {
+			return err
+		}
+		if installRoot == nil {
+			return errors.New("failed to open root path: installDir is nil")
+		}
+		defer installRoot.Close()
+		dest := filepath.Join(vanillaDl[0].Path, vanillaDl[0].Name)
+
+		fDl, err := util.NewDownload(installRoot, dest, vanillaDl[0].Url)
 		if err != nil {
 			return err
 		}
