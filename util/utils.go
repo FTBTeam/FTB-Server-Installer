@@ -19,7 +19,7 @@ import (
 	"time"
 	"unicode"
 
-	semVer "github.com/hashicorp/go-version"
+	semver "github.com/hashicorp/go-version"
 	"github.com/imroc/req/v3"
 	"github.com/pterm/pterm"
 )
@@ -268,14 +268,14 @@ func makeAdoptiumUrl(version string) (string, error) {
 }
 
 func validJavaArch(version string) (string, error) {
-	targetVersion, err := semVer.NewVersion(version)
+	targetVersion, err := semver.NewVersion(version)
 	if err != nil {
 		return "", err
 	}
 	switch runtime.GOOS {
 	case "darwin":
 		if runtime.GOARCH == "arm64" {
-			limit, err := semVer.NewVersion("11.0.0")
+			limit, err := semver.NewVersion("11.0.0")
 			if err != nil {
 				return "", err
 			}
@@ -498,4 +498,68 @@ func RelaunchInTerminal() {
 			return
 		}
 	}
+}
+
+type GHRelease struct {
+	TagName    string `json:"tag_name"`
+	Name       string `json:"name"`
+	Prerelease bool   `json:"prerelease"`
+	Draft      bool   `json:"draft"`
+}
+
+type VersionInfo struct {
+	UpdateAvailable     bool
+	CurrentVersion      string
+	LatestVersion       string
+	Name                string
+	isPreReleaseOrDraft bool
+}
+
+func CheckForUpdate() (VersionInfo, error) {
+	org := "FTBTeam"
+	repo := "FTB-Server-Installer"
+	var versionInfo = VersionInfo{
+		UpdateAvailable:     false,
+		CurrentVersion:      ReleaseVersion,
+		LatestVersion:       "",
+		Name:                "",
+		isPreReleaseOrDraft: false,
+	}
+	releaseApi := fmt.Sprintf("https://api.github.com/repos/%s/%s/releases/latest", org, repo)
+
+	var release GHRelease
+	resp, err := ReqClient.R().
+		SetSuccessResult(&release).
+		Get(releaseApi)
+
+	if err != nil {
+		return versionInfo, fmt.Errorf("error checking for update: %s", err.Error())
+	}
+
+	if !resp.IsSuccessState() {
+		return versionInfo, fmt.Errorf("bad status: %s", resp.Status)
+	}
+
+	if release.Prerelease || release.Draft {
+		versionInfo.isPreReleaseOrDraft = true
+		return versionInfo, nil
+	}
+
+	versionInfo.LatestVersion = release.TagName
+	versionInfo.Name = release.Name
+
+	currentVersion, err := semver.NewVersion(strings.ReplaceAll(ReleaseVersion, "v", ""))
+	if err != nil {
+		return versionInfo, fmt.Errorf("error parsing current version: %s", err.Error())
+	}
+	latestVersion, err := semver.NewVersion(strings.ReplaceAll(versionInfo.LatestVersion, "v", ""))
+	if err != nil {
+		return versionInfo, fmt.Errorf("error parsing latest version: %s", err.Error())
+	}
+
+	if latestVersion.GreaterThan(currentVersion) && ReleaseVersion != "v0.0.0-beta.0" {
+		versionInfo.UpdateAvailable = true
+	}
+
+	return versionInfo, nil
 }

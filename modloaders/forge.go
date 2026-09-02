@@ -2,6 +2,7 @@ package modloaders
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"ftb-server-downloader/structs"
 	"ftb-server-downloader/util"
@@ -101,9 +102,9 @@ func (s Forge) Install(useOwnJava bool) error {
 			return fmt.Errorf("error running forge installer: %s", err.Error())
 		}
 		if err = cmd.Wait(); err != nil {
-			if err, ok := err.(*exec.ExitError); ok {
-				if err.ExitCode() != 0 {
-					return fmt.Errorf("forge installer failed with exit code %d, error: %s", err.ExitCode(), err.Error())
+			if exitErr, ok := errors.AsType[*exec.ExitError](err); ok {
+				if exitErr.ExitCode() != 0 {
+					return fmt.Errorf("forge installer failed with exit code %d, error: %s", exitErr.ExitCode(), exitErr.Error())
 				}
 			} else {
 				return fmt.Errorf("error waiting for command: %s", err.Error())
@@ -134,8 +135,18 @@ func (s Forge) Install(useOwnJava bool) error {
 		if err != nil {
 			return err
 		}
-		dest := filepath.Join(s.InstallDir, vanillaDl[0].Path, vanillaDl[0].Name)
-		fDl, err := util.NewDownload(dest, vanillaDl[0].Url)
+
+		installRoot, err := os.OpenRoot(s.InstallDir)
+		if err != nil {
+			return err
+		}
+		if installRoot == nil {
+			return errors.New("failed to open root path: installDir is nil")
+		}
+		defer installRoot.Close()
+		dest := filepath.Join(vanillaDl[0].Path, vanillaDl[0].Name)
+
+		fDl, err := util.NewDownload(installRoot, dest, vanillaDl[0].Url)
 		if err != nil {
 			return err
 		}

@@ -18,6 +18,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -49,7 +50,8 @@ var (
 	acceptEula    bool
 	verbose       bool
 
-	logFile *os.File
+	logFile     *os.File
+	installRoot *os.Root
 )
 
 func init() {
@@ -155,6 +157,15 @@ func main() {
 	if verbose {
 		pterm.EnableDebugMessages()
 		pterm.Debug.Println("Verbose output enabled")
+	}
+
+	versionInfo, err := util.CheckForUpdate()
+	if err != nil {
+		pterm.Warning.Printfln("Error checking for installer update: %v", err)
+	}
+	if versionInfo.UpdateAvailable {
+		pterm.Warning.Printfln("A new version of the installer is available: %s,\nDownload it from: https://github.com/FTBTeam/FTB-Server-Installer/releases", strings.TrimPrefix(versionInfo.LatestVersion, "v"))
+		pterm.Println()
 	}
 
 	abs, err := filepath.Abs(installDir)
@@ -403,14 +414,20 @@ func main() {
 		os.Exit(1)
 	}
 
+	installRoot, err = os.OpenRoot(installDir)
+	if err != nil {
+		pterm.Fatal.Println("Error opening install directory:", err.Error())
+		return
+	}
+	if installRoot == nil {
+		pterm.Fatal.Println("Error opening install directory: installRoot is nil")
+		return
+	}
+	defer installRoot.Close()
+
 	if isUpdate {
 		for _, f := range removedFiles {
-			safePath, err := keystone.EnsurePathWithinRoot(filepath.Join(installDir, f.Path, f.Name), installDir)
-			if err != nil {
-				pterm.Fatal.Printfln("File path %s is outside of the install directory, failing install", filepath.Join(installDir, f.Path, f.Name))
-			}
-
-			err = os.Remove(safePath)
+			err = installRoot.Remove(filepath.Join(f.Path, f.Name))
 			if err != nil {
 				pterm.Error.Printfln("Removing files error: %s", err.Error())
 				continue
@@ -419,12 +436,7 @@ func main() {
 
 		// For now, we remove the files that have been updated so they can be freshly downloaded.
 		for _, f := range updatedFiles {
-			safePath, err := keystone.EnsurePathWithinRoot(filepath.Join(installDir, f.Path, f.Name), installDir)
-			if err != nil {
-				pterm.Fatal.Printfln("File path %s is outside of the install directory, failing install", filepath.Join(installDir, f.Path, f.Name))
-			}
-
-			err = os.Remove(safePath)
+			err = installRoot.Remove(filepath.Join(f.Path, f.Name))
 			if err != nil {
 				pterm.Error.Printfln("Removing update files error: %s", err.Error())
 				continue
@@ -432,13 +444,7 @@ func main() {
 		}
 
 		// Remove unchanged files from filesToDownload, we don't want to re-download unchanged files
-		for _, f := range unchangedFiles {
-			for i, v := range filesToDownload {
-				if v.Name == f.Name && v.Path == f.Path {
-					filesToDownload = append(filesToDownload[:i], filesToDownload[i+1:]...)
-				}
-			}
-		}
+		filesToDownload = removeUnchangedFiles(filesToDownload, unchangedFiles)
 	}
 
 	// download the modpack files
@@ -454,7 +460,7 @@ func main() {
 	// If we downloaded java, extract the files to a jre folder
 	if !noJava && !jreAlreadyExists {
 
-		javaFile, err := os.Open(filepath.Join(installDir, java.Name))
+		javaFile, err := installRoot.Open(java.Name)
 		if err != nil {
 			selectedProvider.FailedInstall()
 			pterm.Fatal.Println("Error opening java archive", err.Error())
@@ -476,7 +482,7 @@ func main() {
 			join := strings.Join(parts, string(sep))
 			return join
 		}
-		err = extract.Archive(context.TODO(), javaPkg, filepath.Join(installDir, "jre", modpackVersion.Targets.JavaVersion), shift)
+		err = extract.Archive(context.Background(), javaPkg, filepath.Join(installDir, "jre", modpackVersion.Targets.JavaVersion), shift)
 		if err != nil {
 			selectedProvider.FailedInstall()
 			pterm.Fatal.Println("Error extracting java archive:", err.Error())
@@ -538,8 +544,7 @@ func main() {
 	selectedProvider.SuccessfulInstall()
 	if acceptEula {
 		// set eula=true in the eula.txt file
-		eulaFile := filepath.Join(installDir, "eula.txt")
-		err = os.WriteFile(eulaFile, []byte("#By changing the setting below to TRUE you are indicating your agreement to our EULA (https://account.mojang.com/documents/minecraft_eula).\neula=true\n"), 0644)
+		err = installRoot.WriteFile("eula.txt", []byte("#By changing the setting below to TRUE you are indicating your agreement to our EULA (https://account.mojang.com/documents/minecraft_eula).\neula=true\n"), 0644)
 		if err != nil {
 			pterm.Error.Println("Error writing eula.txt file:", err.Error())
 		}
@@ -635,11 +640,7 @@ func downloadFiles(files ...structs.File) error {
 }
 
 func doDownload(file structs.File) error {
-	destPath := filepath.Join(installDir, file.Path, file.Name)
-	safePath, err := keystone.EnsurePathWithinRoot(destPath, installDir)
-	if err != nil {
-		return fmt.Errorf("file path %s is outside of the install directory, failing install", destPath)
-	}
+	relPath := filepath.Join(file.Path, file.Name)
 
 	mirrors := append([]string{file.Url}, file.Mirrors...)
 
@@ -647,7 +648,7 @@ func doDownload(file structs.File) error {
 		for attempts := range 3 {
 			pterm.Debug.Printfln("Downloading file: %s from %s | attempt: %d | Mirrors %d", file.Name, mirror, attempts+1, len(mirrors))
 
-			dl, err := util.NewDownload(safePath, mirror)
+			dl, err := util.NewDownload(installRoot, relPath, mirror)
 			if err != nil {
 				pterm.Error.Printfln("Error creating download: %s", err.Error())
 				c, b, err := util.FailedDownloadHandler(attempts, m, file, mirror, mirrors)
@@ -742,11 +743,7 @@ func runValidation(manifest structs.Manifest) error {
 }
 
 func processValidationFiles(f structs.File) (string, error) {
-	safePath, err := keystone.EnsurePathWithinRoot(filepath.Join(installDir, f.Path, f.Name), installDir)
-	if err != nil {
-		return "", fmt.Errorf("file path %s is outside of the install directory, failing install", filepath.Join(installDir, f.Path, f.Name))
-	}
-	packFile, err := os.Open(safePath)
+	packFile, err := installRoot.Open(filepath.Join(f.Path, f.Name))
 	if err != nil {
 		return "", err
 	}
@@ -843,14 +840,11 @@ func computeUpdatedFiles(currentFiles, newFiles []structs.File) (updatedFiles, r
 
 func removeUnchangedFiles(files []structs.File, unchangedFiles []structs.File) []structs.File {
 	// removed unchanged files from files
-	for _, f := range unchangedFiles {
-		for i, v := range files {
-			if v.Name == f.Name && v.Path == f.Path {
-				files = append(files[:i], files[i+1:]...)
-			}
-		}
-	}
-	return files
+	return slices.DeleteFunc(files, func(dFile structs.File) bool {
+		return slices.ContainsFunc(unchangedFiles, func(file structs.File) bool {
+			return dFile.Name == file.Name && dFile.Path == file.Path
+		})
+	})
 }
 
 func getLatestRelease(versions []structs.ModpackV, latest bool) (structs.ModpackV, error) {

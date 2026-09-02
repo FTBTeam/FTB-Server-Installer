@@ -2,6 +2,7 @@ package modloaders
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"ftb-server-downloader/structs"
 	"ftb-server-downloader/util"
@@ -94,10 +95,9 @@ func (s NeoForge) Install(useOwnJava bool) error {
 		return fmt.Errorf("error running neoforge installer: %s", err.Error())
 	}
 	if err = cmd.Wait(); err != nil {
-		// Todo test this with errors.As
-		if err, ok := err.(*exec.ExitError); ok {
-			if err.ExitCode() != 0 {
-				return fmt.Errorf("neoforge installer failed with exit code %d", err.ExitCode())
+		if exitErr, ok := errors.AsType[*exec.ExitError](err); ok {
+			if exitErr.ExitCode() != 0 {
+				return fmt.Errorf("neoforge installer failed with exit code %d, error: %s", exitErr.ExitCode(), exitErr.Error())
 			}
 		} else {
 			return fmt.Errorf("error waiting for command: %s", err.Error())

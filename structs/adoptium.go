@@ -27,5 +27,5 @@ type AdoptiumBinaries struct {
 	Project       string          `json:"project"`
 	ScmRef        string          `json:"scm_ref"`
 	UpdatedAt     time.Time       `json:"updated_at"`
-	Installer     Installer       `json:"installer,omitempty"`
+	Installer     Installer       `json:"installer"`
 }
