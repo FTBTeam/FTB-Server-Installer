@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.51
+- Add update available message when a new installer version is released
+- Use os.Root for path traversal checks
+- Error handling improvements
+
 ## 1.0.50
 - Updated packages and golang version
   - Uses go 1.27 and encoding/json package v2
