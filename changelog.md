@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.52
+- Updated go to 1.27.1
+  - Fixes minor bugs with encoding/json/v2
+
 ## 1.0.51
 - Add update available message when a new installer version is released
 - Use os.Root for path traversal checks
