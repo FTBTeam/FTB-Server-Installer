@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.53
+
+- Bumped go version and packages
+- Fixed issue with fabric and legacy forge run script missing a space
+- Fixed issue with 1.4.2, 1.4.7 & 1.5.2 forge packs not downloading some libraries
+
 ## 1.0.52
 - Updated go to 1.27.1
   - Fixes minor bugs with encoding/json/v2
