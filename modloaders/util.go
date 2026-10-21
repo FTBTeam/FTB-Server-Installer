@@ -90,7 +90,7 @@ func writeRunFile(runFile *os.File, javaPath string, log4jFix string, recMem int
 		}
 	}
 	if runtime.GOOS == "darwin" || runtime.GOOS == "linux" {
-		_, err = runFile.WriteString(fmt.Sprintf("#!/usr/bin/env sh\n\"%s\"%s-Xmx%dM -jar %s nogui", javaPath, log4jFix, recMem, runJarName))
+		_, err = runFile.WriteString(fmt.Sprintf("#!/usr/bin/env sh\n\"%s\"%s -Xmx%dM -jar %s nogui", javaPath, log4jFix, recMem, runJarName))
 		if err != nil {
 			return err
 		}
