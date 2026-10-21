@@ -27,6 +27,27 @@ var (
 	versionsToRename = []string{
 		"1.5.2",
 	}
+
+	legacyLibraries = map[string][]structs.LegacyLibraryFiles{
+		"1.4.7": {
+			{JarName: "bcprov-jdk15on-147.jar", URL: "https://cdn.feed-the-beast.com/app/assets/jars/thirdparty/bcprov-jdk15on-1.47.jar", Size: 1997327, Sha1: "b6f5d9926b0afbde9f4dbe3db88c5247be7794bb"},
+			{JarName: "argo-2.25.jar", URL: "https://cdn.feed-the-beast.com/app/assets/jars/thirdparty/argo-2.25.jar", Size: 123642, Sha1: "bb672829fde76cb163004752b86b0484bd0a7f4b"},
+			{JarName: "guava-12.0.1.jar", URL: "https://cdn.feed-the-beast.com/app/assets/jars/thirdparty/guava-12.0.1.jar", Size: 1795932, Sha1: "b8e78b9af7bf45900e14c6f958486b6ca682195f"},
+			{JarName: "asm-all-4.0.jar", URL: "https://cdn.feed-the-beast.com/app/assets/jars/thirdparty/asm-all-4.0-fml.jar", Size: 212767, Sha1: "98308890597acb64047f7e896638e0d98753ae82"},
+		},
+		"1.4.2": {
+			{JarName: "argo-2.25.jar", URL: "https://cdn.feed-the-beast.com/app/assets/jars/thirdparty/argo-2.25.jar", Size: 123642, Sha1: "bb672829fde76cb163004752b86b0484bd0a7f4b"},
+			{JarName: "guava-12.0.1.jar", URL: "https://cdn.feed-the-beast.com/app/assets/jars/thirdparty/guava-12.0.1.jar", Size: 1795932, Sha1: "b8e78b9af7bf45900e14c6f958486b6ca682195f"},
+			{JarName: "asm-all-4.0.jar", URL: "https://cdn.feed-the-beast.com/app/assets/jars/thirdparty/asm-all-4.0-fml.jar", Size: 212767, Sha1: "98308890597acb64047f7e896638e0d98753ae82"},
+		},
+		"1.5.2": {
+			{JarName: "argo-small-3.2.jar", URL: "https://cdn.feed-the-beast.com/app/assets/jars/thirdparty/argo-3.2-small.jar", Size: 91333, Sha1: "58912ea2858d168c50781f956fa5b59f0f7c6b51"},
+			{JarName: "guava-14.0-rc3.jar", URL: "https://cdn.feed-the-beast.com/app/assets/jars/thirdparty/guava-14.0-rc3.jar", Size: 2189140, Sha1: "931ae21fa8014c3ce686aaa621eae565fefb1a6a"},
+			{JarName: "asm-all-4.1.jar", URL: "https://cdn.feed-the-beast.com/app/assets/jars/thirdparty/asm-all-4.1.jar", Size: 214592, Sha1: "054986e962b88d8660ae4566475658469595ef58"},
+			{JarName: "deobfuscation_data_1.5.2.zip", URL: "https://cdn.feed-the-beast.com/app/assets/jars/thirdparty/deobfuscation_data-1.5.2.zip", Size: 201404, Sha1: "446e55cd986582c70fcf12cb27bc00114c5adfd9"},
+			{JarName: "scala-library-2.10.0.jar", URL: "https://cdn.feed-the-beast.com/app/assets/jars/thirdparty/scala-library-2.10.0.jar", Size: 7114639, Sha1: "43c6d98b445187c6b459a582c774ffb025120ef4"},
+		},
+	}
 )
 
 type Forge struct {
@@ -67,6 +88,14 @@ func (s Forge) GetDownload() ([]structs.File, error) {
 		Url:                installerUrl,
 		CheckContentLength: true,
 	})
+
+	libraryFiles := legacyLibraries[s.Targets.McVersion]
+
+	if len(libraryFiles) > 0 {
+		libFiles := legacyLibraryInstall(libraryFiles, s.Targets.McVersion)
+		mlFiles = append(mlFiles, libFiles...)
+	}
+
 	return mlFiles, nil
 }
 
@@ -328,4 +357,20 @@ func (s Forge) startScript(ownJava bool) error {
 	}
 
 	return nil
+}
+
+func legacyLibraryInstall(libFiles []structs.LegacyLibraryFiles, mcVer string) []structs.File {
+	var files []structs.File
+
+	for _, libFile := range libFiles {
+		files = append(files, structs.File{
+			Name:     libFile.JarName,
+			Path:     "lib",
+			Hash:     libFile.Sha1,
+			HashType: "sha1",
+			Url:      libFile.URL,
+		})
+	}
+
+	return files
 }

@@ -44,3 +44,9 @@ type ModpackTargets struct { // I want to rename this
 	JavaVersion string          `json:"javaVersion"`
 	McVersion   string          `json:"mcVersion"`
 }
+type LegacyLibraryFiles struct {
+	JarName string
+	URL     string
+	Size    int
+	Sha1    string
+}
