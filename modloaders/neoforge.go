@@ -128,33 +128,13 @@ func (s NeoForge) startScript(ownJava bool) error {
 	pterm.Debug.Println("runScriptPath:", runScriptPath)
 
 	if argsExist, _ := util.PathExists(argsFilePath); argsExist {
-		argsFile, err := os.Open(argsFilePath)
+		err := appendArsFile(argsFilePath, []string{
+			fmt.Sprintf("-Xmx%dM", s.Memory.Recommended),
+			"-XX:+UnlockDiagnosticVMOptions",
+			"-XX:-UseBASE64Intrinsics",
+		})
 		if err != nil {
 			return err
-		}
-		defer argsFile.Close()
-
-		scanner := bufio.NewScanner(argsFile)
-		hasXmx := false
-		for scanner.Scan() {
-			line := scanner.Text()
-			if strings.HasPrefix(line, "-Xmx") {
-				hasXmx = true
-				break
-			}
-		}
-
-		if !hasXmx {
-			argsFile, err = os.OpenFile(argsFilePath, os.O_APPEND|os.O_WRONLY, 0644)
-			if err != nil {
-				return err
-			}
-			defer argsFile.Close()
-
-			_, err = argsFile.WriteString(fmt.Sprintf("\n-Xmx%dM", s.Memory.Recommended))
-			if err != nil {
-				return err
-			}
 		}
 	}
 

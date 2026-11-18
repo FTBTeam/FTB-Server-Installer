@@ -222,40 +222,29 @@ func (s Forge) startScript(ownJava bool) error {
 	pterm.Debug.Println("argFilePath:", argsFilePath)
 	pterm.Debug.Println("runScriptPath:", runScriptPath)
 
+	var extraArgs []string
 	log4jFix, err := Log4JFixer(s.InstallDir, s.Targets.McVersion)
 	if err != nil {
 		pterm.Warning.Printfln("Failed to apply log4j fix: %s", err.Error())
+	} else {
+		extraArgs = append(extraArgs, log4jFix)
+	}
+
+	java4ShellFix, err := Java4ShellFix(s.Targets.JavaVersion)
+	if err != nil {
+		pterm.Warning.Printfln("Failed to apply log4j fix: %s", err.Error())
+	} else {
+		extraArgs = append(extraArgs, java4ShellFix)
 	}
 
 	if argsExist, _ := util.PathExists(argsFilePath); argsExist {
-		argsFile, err := os.Open(argsFilePath)
+		err := appendArsFile(argsFilePath, []string{
+			fmt.Sprintf("-Xmx%dM", s.Memory.Recommended),
+			"-XX:+UnlockDiagnosticVMOptions",
+			"-XX:-UseBASE64Intrinsics",
+		})
 		if err != nil {
 			return err
-		}
-		defer argsFile.Close()
-
-		scanner := bufio.NewScanner(argsFile)
-		hasXmx := false
-		for scanner.Scan() {
-			line := scanner.Text()
-			if strings.HasPrefix(line, "-Xmx") {
-				hasXmx = true
-				break
-			}
-		}
-
-		if !hasXmx {
-			argsFile, err = os.OpenFile(argsFilePath, os.O_APPEND|os.O_WRONLY, 0644)
-			if err != nil {
-				return err
-			}
-			defer argsFile.Close()
-
-			customArgs := fmt.Sprintf("\n-Xmx%dM\n%s", s.Memory.Recommended, log4jFix)
-			_, err = argsFile.WriteString(customArgs)
-			if err != nil {
-				return err
-			}
 		}
 	}
 
@@ -350,7 +339,7 @@ func (s Forge) startScript(ownJava bool) error {
 		}
 		pterm.Debug.Println("Runtime jar file:", runJarName)
 
-		err = writeRunFile(runFile, javaPath, log4jFix, s.Memory.Recommended, runJarName)
+		err = writeRunFile(runFile, javaPath, extraArgs, s.Memory.Recommended, runJarName)
 		if err != nil {
 			return err
 		}
