@@ -150,7 +150,7 @@ func writeRunFile(runFile *os.File, javaPath string, extraArgsSlice []string, re
 		extraArgs = " " + extraArgs
 	}
 
-	startCommand := fmt.Sprintf("\"%s\"%s -Xmx%dM -jar %s nogui\"", javaPath, extraArgs, recMem, runJarName)
+	startCommand := fmt.Sprintf("\"%s\"%s -Xmx%dM -jar %s nogui", javaPath, extraArgs, recMem, runJarName)
 	if runtime.GOOS == "windows" {
 		_, err = runFile.WriteString(startCommand)
 		if err != nil {
