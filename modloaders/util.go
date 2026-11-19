@@ -149,14 +149,17 @@ func writeRunFile(runFile *os.File, javaPath string, extraArgsSlice []string, re
 	if len(extraArgsSlice) > 0 {
 		extraArgs = " " + extraArgs
 	}
+
+	startCommand := fmt.Sprintf("\"%s\"%s -Xmx%dM -jar %s nogui\"", javaPath, extraArgs, recMem, runJarName)
 	if runtime.GOOS == "windows" {
-		_, err = runFile.WriteString(fmt.Sprintf("\"%s\"%s -Xmx%dM -jar %s nogui", javaPath, extraArgs, recMem, runJarName))
+		_, err = runFile.WriteString(startCommand)
 		if err != nil {
 			return err
 		}
 	}
 	if runtime.GOOS == "darwin" || runtime.GOOS == "linux" {
-		_, err = runFile.WriteString(fmt.Sprintf("#!/usr/bin/env sh\n\"%s\"%s -Xmx%dM -jar %s nogui", javaPath, extraArgs, recMem, runJarName))
+		startCommand = fmt.Sprintf("#!/usr/bin/env sh\n%s", startCommand)
+		_, err = runFile.WriteString(startCommand)
 		if err != nil {
 			return err
 		}
