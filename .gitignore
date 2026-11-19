@@ -6,11 +6,10 @@ test/*
 *.log
 out/
 *.md
+!README.md
 
 .git-old/
 
 post-body.json
-
-refactor.md
 
 ftb-server-downloader
