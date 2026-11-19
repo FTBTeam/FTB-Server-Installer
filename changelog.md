@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.54
+
+- Updated golang and packages
+- Added Java Arguments to mitigate CVE-2026-114938 on all fresh installs/updates using Java 17 or newer
+
 ## 1.0.53
 
 - Bumped go version and packages

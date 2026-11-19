@@ -139,9 +139,19 @@ func (s Fabric) startScript(ownJava bool) error {
 	}
 	pterm.Debug.Println("runScriptPath:", runScriptPath)
 
+	var extraArgs []string
 	log4jFix, err := Log4JFixer(s.InstallDir, s.Targets.McVersion)
 	if err != nil {
 		pterm.Warning.Printfln("Failed to apply log4j fix: %s", err.Error())
+	} else {
+		extraArgs = append(extraArgs, log4jFix)
+	}
+
+	java4ShellFix, err := Java4ShellFix(s.Targets.JavaVersion)
+	if err != nil {
+		pterm.Warning.Printfln("Failed to apply log4j fix: %s", err.Error())
+	} else {
+		extraArgs = append(extraArgs, java4ShellFix)
 	}
 
 	runFile, err := os.OpenFile(runScriptPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
@@ -158,7 +168,7 @@ func (s Fabric) startScript(ownJava bool) error {
 	}
 	runJarName := "fabric-server-launch.jar"
 
-	err = writeRunFile(runFile, javaPath, log4jFix, s.Memory.Recommended, runJarName)
+	err = writeRunFile(runFile, javaPath, extraArgs, s.Memory.Recommended, runJarName)
 	if err != nil {
 		return err
 	}

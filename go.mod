@@ -1,6 +1,6 @@
 module ftb-server-downloader
 
-go 1.27.3
+go 1.27.4
 
 require (
 	github.com/codeclysm/extract/v4 v4.0.2
@@ -8,7 +8,7 @@ require (
 	github.com/hashicorp/go-version v1.9.0
 	github.com/imroc/req/v3 v3.61.0
 	github.com/pterm/pterm v0.12.84
-	golang.org/x/term v0.47.0
+	golang.org/x/term v0.48.0
 )
 
 require (
@@ -25,13 +25,13 @@ require (
 	github.com/juju/errors v1.0.0 // indirect
 	github.com/klauspost/compress v1.20.3 // indirect
 	github.com/lithammer/fuzzysearch v1.1.8 // indirect
-	github.com/mattn/go-runewidth v0.0.27 // indirect
+	github.com/mattn/go-runewidth v0.0.24 // indirect
 	github.com/quic-go/qpack v0.6.0 // indirect
 	github.com/quic-go/quic-go v0.61.0 // indirect
 	github.com/refraction-networking/utls v1.8.2 // indirect
 	github.com/ulikunitz/xz v0.5.17 // indirect
-	golang.org/x/crypto v0.58.0 // indirect
-	golang.org/x/net v0.60.0 // indirect
-	golang.org/x/sys v0.49.0 // indirect
-	golang.org/x/text v0.43.0 // indirect
+	golang.org/x/crypto v0.55.0 // indirect
+	golang.org/x/net v0.57.0 // indirect
+	golang.org/x/sys v0.50.0 // indirect
+	golang.org/x/text v0.41.0 // indirect
 )
