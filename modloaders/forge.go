@@ -226,14 +226,14 @@ func (s Forge) startScript(ownJava bool) error {
 	log4jFix, err := Log4JFixer(s.InstallDir, s.Targets.McVersion)
 	if err != nil {
 		pterm.Warning.Printfln("Failed to apply log4j fix: %s", err.Error())
-	} else {
+	} else if log4jFix != "" {
 		extraArgs = append(extraArgs, log4jFix)
 	}
 
 	java4ShellFix, err := Java4ShellFix(s.Targets.JavaVersion)
 	if err != nil {
 		pterm.Warning.Printfln("Failed to apply log4j fix: %s", err.Error())
-	} else {
+	} else if java4ShellFix != "" {
 		extraArgs = append(extraArgs, java4ShellFix)
 	}
 
